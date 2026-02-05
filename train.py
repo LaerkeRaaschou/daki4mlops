@@ -8,10 +8,9 @@ from data import dataloader
 import os
 import wandb
 
-from torch.cuda.amp import GradScaler
 
 
-def train_model(model, dataloader, optimizer, device, num_epochs):
+def train_model(model, dataloader, optimizer, device, epoch):
     model.train()
     loss_function = nn.CrossEntropyLoss()
 
@@ -26,6 +25,28 @@ def train_model(model, dataloader, optimizer, device, num_epochs):
         loss.backward()
         optimizer.step()
 
+        if i % 200 == 0:
+            print("Train Epoch: %s, Iteration: %s, Train Loss: %s" % (epoch, i, loss.item()))
+            wandb.log({"Train Loss": loss.item()})
+    return loss.item
+
+
+def val_model(model, dataloader, device, epoch):
+    model.eval()
+    loss = 0.0
+
+    for x, y in enumerate(dataloader):
+        x = x.to(device)
+        y = y.to(device)
+        
+        y_pred = model(x)
+        loss = loss_function(y, y_pred)
+        loss.backward()
+        optimizer.step()
+
+        if i % 200 == 0:
+            print("Val Epoch: %s, Iteration: %s, Val Loss: %s" % (epoch, i, loss.item()))
+            wandb.log({"Val Loss": loss.item()})
     return loss.item
 
 
@@ -37,6 +58,7 @@ def main():
     batch_size = 10
     learning_rate = 1e-2
     loss = 0
+    epoch = 1
 
     # Start wandb
     wandb.login()
@@ -52,6 +74,12 @@ def main():
     # Download data
     data_path = ""
 
+    # Get data loader
+    train_set = x(data_path, split="train-standard", train=True)
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=1, shuffle=False, num_workers=16)
+
+    # Initialize model 
+    model = resnet.to(device)
     # Define optimizer
     optimizer = optim.SGD(model_parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-4)
     schedular = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
