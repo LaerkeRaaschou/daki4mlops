@@ -1,0 +1,7 @@
+root: data/tiny-imagenet-200
+
+train_dir: ${data.root}/train
+test_dir: ${data.root}/val
+
+words_file: ${data.root}/words.txt
+test_annotations: ${data.test_dir}/val_annotations.txt
