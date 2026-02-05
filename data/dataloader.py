@@ -67,9 +67,8 @@ class TinyImagenetTestset(Dataset):
         sample = (img, class_id)
         return sample
 
-@hydra.main(config_path="../conf", config_name="config", version_base=None)
-def main(cfg):
-    """ How to use the functions and methods in this module """
+@hydra.get_train_loader(config_path="../conf", config_name="config", version_base=None)
+def get_train_loader():
     # Define transforms for the training set
     transform_train = transforms.Compose([transforms.Resize((64, 64)),
                                           transforms.ToTensor(),
@@ -77,24 +76,24 @@ def main(cfg):
                                                                std=(0.229, 0.224, 0.225))]
                                         )
     
+    # Training set made up of img and train_id
+    train_dataset = datasets.ImageFolder(root=cfg.data.train_dir, transform=transform_train)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+    return train_loader
+
+
+@hydra.get_test_loader(config_path="../conf", config_name="config", version_base=None)
+def get_test_loader(cfg):
+    """ How to use the functions and methods in this module """
+    
     transform_test = transforms.Compose([transforms.Resize((64, 64)),
                                     transforms.ConvertImageDtype(torch.float32),
                                     transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))]
                                     )
     
-    # Training set made up of img and train_id
-    train_dataset = datasets.ImageFolder(root=cfg.data.train_dir, transform=transform_train)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-
-    # How to use function map_train_id_to_class_id
-    print(map_train_id_to_class_id(train_dataset, train_dataset[0][1]))
-
     # Test set made up of img and class_id
     test_dataset = TinyImagenetTestset(root=cfg.data.test_dir, transform=transform_test, annotations_path=cfg.data.test_annotations)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
-    # How to use map_class_id_to_class_label
-    print(map_class_id_to_class_label(test_dataset[0][1]))
-
-if __name__ == "__main__":
-    main()
+    return test_loader
