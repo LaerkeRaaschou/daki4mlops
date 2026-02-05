@@ -5,6 +5,7 @@ import torch
 from torchvision.io import decode_image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
+import hydra
 
 batch_size = 64
 
@@ -34,14 +35,14 @@ def map_class_id_to_class_label(class_id):
 
 
 class TinyImagenetTestset(Dataset):
-    def __init__(self, data_dir, transform):
+    def __init__(self, root, transform, annotations_path):
         # Find all paths to images inside the pathfolder
-        self.image_paths = sorted(glob(os.path.join(data_dir, "**", "*.JPEG"), recursive=True))
+        self.image_paths = sorted(glob(os.path.join(root, "**", "*.JPEG"), recursive=True))
         self.transform = transform
         self.mapping = {}
 
         # Create mapping for each test image to corresponding class_id
-        with open(os.path.join(data_dir, "val_annotations.txt"), "r") as file:
+        with open(annotations_path, "r") as file:
             for line in file:
                 fields = line.strip().split("\t")
                 filename = fields[0]
@@ -66,8 +67,8 @@ class TinyImagenetTestset(Dataset):
         sample = (img, class_id)
         return sample
 
-
-def main():
+@hydra.main(config_path="../conf", config_name="config", version_base=None)
+def main(cfg):
     """ How to use the functions and methods in this module """
     # Define transforms for the training set
     transform_train = transforms.Compose([transforms.Resize((64, 64)),
@@ -82,14 +83,14 @@ def main():
                                     )
     
     # Training set made up of img and train_id
-    train_dataset = datasets.ImageFolder(root="data/tiny-imagenet-200/train", transform=transform_train)
+    train_dataset = datasets.ImageFolder(root=cfg.data.train_dir, transform=transform_train)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
     # How to use function map_train_id_to_class_id
     print(map_train_id_to_class_id(train_dataset, train_dataset[0][1]))
 
     # Test set made up of img and class_id
-    test_dataset = TinyImagenetTestset("data/tiny-imagenet-200/val", transform=transform_test)
+    test_dataset = TinyImagenetTestset(root=cfg.data.test_dir, transform=transform_test, annotations_path=cfg.data.test_annotations)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
     # How to use map_class_id_to_class_label
