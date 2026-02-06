@@ -6,12 +6,12 @@ test_dir: ${data.root}/val
 words_file: ${data.root}/words.txt
 test_annotations: ${data.test_dir}/val_annotations.txt
 
-transform_train: $transform_train = transforms.Compose([transforms.Resize((64, 64)),
+transform_train: $transforms.Compose([transforms.Resize((64, 64)),
                                           transforms.ToTensor(),
                                           transforms.Normalize(mean=(0.485, 0.456, 0.406), 
                                                                std=(0.229, 0.224, 0.225))]
                                         )
-transform_test: $transform_test = transforms.Compose([transforms.Resize((64, 64)),
+transform_test: $transforms.Compose([transforms.Resize((64, 64)),
                                     transforms.ConvertImageDtype(torch.float32),
                                     transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))]
                                     )
