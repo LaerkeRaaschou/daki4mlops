@@ -5,6 +5,7 @@ from torch.optim.lr_scheduler import StepLR
 from model.resnet18 import ResNet18
 from data.dataloader import get_train_loader
 import wandb
+from torchvision import transforms
 
 
 
@@ -106,8 +107,12 @@ def main():
     optimizer = SGD(model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-4)
     scheduler = StepLR(optimizer, step_size=3, gamma=0.1)
 
+    transform_train = transforms.Compose([transforms.Resize((64, 64)),
+                                          transforms.ToTensor(),
+                                          transforms.Normalize(mean=(0.485, 0.456, 0.406), 
+                                                               std=(0.229, 0.224, 0.225))])
     # Train loader
-    train_loader = get_train_loader(train_dir=f"{data_path}/train", batch_size=batch_size)
+    train_loader = get_train_loader(train_dir=f"{data_path}/train", batch_size=batch_size, transform_train=transform_train, shuffle=True)
 
     # Data check
     x0, y0 = next(iter(train_loader))
