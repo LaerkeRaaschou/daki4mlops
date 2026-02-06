@@ -1,12 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-import torchprofile 
-import torchvision
-import torchvision.transforms as transforms
-import matplotlib.pyplot as plt
-import numpy as np
+
 
 class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1, downsample=None):
@@ -114,11 +108,7 @@ if __name__ == '__main__':
         p.numel() for p in model.parameters() if p.requires_grad)
     print(f"{total_trainable_params:,} training parameters.")
     
-    macs = torchprofile.profile_macs(model, args = (tensor,))
-    flops = macs*2
     print("64 size image")
-    print(f'{flops/1e9:.2f}G total flops')
-    print(f"MACs: {macs/1e9:.2f}G")
-
+    
     output = model(tensor)
 
