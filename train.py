@@ -147,6 +147,8 @@ def main():
             f"Val Accuracy = {val_acc:.3f}. "
         )
 
+    torch.save(model.state_dict(), "resnet_18_classifier.pt")
+
 
 if __name__ == "__main__":
     main()
