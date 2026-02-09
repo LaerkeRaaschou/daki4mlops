@@ -1,11 +1,9 @@
 import os
 from glob import glob
 from pathlib import Path
-import torch
 from torchvision.io import decode_image
 from torch.utils.data import Dataset, DataLoader
-from torchvision import datasets, transforms
-import hydra
+from torchvision import datasets
 
 class TinyImagenetTestset(Dataset):
     def __init__(self, root, transform, annotations_path):
@@ -39,6 +37,7 @@ class TinyImagenetTestset(Dataset):
         
         sample = (img, class_id)
         return sample
+
 
 def map_train_id_to_class_id(dataset, train_id):
     """Map the continuous training id to dataset class id for a specific train_id"""
