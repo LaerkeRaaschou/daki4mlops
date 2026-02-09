@@ -1,11 +1,11 @@
 ---
 {{ card_data }}
+model_id: RESNET-18-123
+model_summary: The goal of this model is to classify images.
 ---
 
 # Model Card for {{ model_id | default("Model ID", true) }}
 
-model_id = RESNET-18-123
-model_summary = The goal of this model is to classify images.
 <!-- Provide a quick summary of what the model is/does. -->
 
 {{ model_summary | default("", true) }}
