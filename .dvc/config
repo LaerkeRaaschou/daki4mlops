@@ -1,4 +1,8 @@
 [core]
     remote = storage
 ['remote "storage"']
-    url = http://172.24.198.42:9001/browser/mlopsgr5/
+    url = s3://mlopsgr5
+    endpointurl = http://172.24.198.42:9000
+    use_ssl = false
+    access_key_id = daki
+    secret_access_key = dakiminio
