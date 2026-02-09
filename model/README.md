@@ -7,27 +7,31 @@ developers: Anne, Lærke og Stoyan
 model_type: Image classifier
 base_model: RESNET-18
 repo: https://github.com/LaerkeRaaschou/daki4mlops/blob/main/model/README.md
+
+
 bias_risks_limitations: The model has following bias and risk when used xxxx
+
+train_data: Training set from the Tiny-imagenet-200 dataset
+testing_data: Validation set from Tiny-imagenet-200 dataset
+
+model_specs: The base architecture is the RESNET-18 xxxxx
 ---
 
-<!-- model_id -->
-# Model Card for RESNET-18 
-<!-- model_summary -->
-Model summary: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images.
+
+# Model Card for RESNET-18 <!-- model_id -->
+Model summary: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images. <!-- model_summary -->
 
 ## Model Details
 
 ### Model Description
 
-<!-- model_description -->
-Model description: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images. With some more information.
+Model description: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images. With some more information. <!-- model_description -->
 
 - **Developed by: Anne, Lærke og Stoyan** <!-- developers -->
 - **Model type: Image Classifier** <!-- model_type -->
 - **Finetuned from model: RESNET-18:** <!-- base_model -->
 
-### Model Sources [optional]
-
+### Model Sources
 <!-- Provide the basic links for the model. -->
 
 - **Repository: https://github.com/LaerkeRaaschou/daki4mlops/blob/main/model/README.md** <!-- repo -->
@@ -103,7 +107,7 @@ Use the code below to get started with the model.
 
 <!-- This should link to a Dataset Card if possible. -->
 
-{{ testing_data | default("[More Information Needed]", true)}}
+testing_data: Validation set from Tiny-imagenet-200 dataset <!-- testing_data -->
 
 #### Factors
 
@@ -125,29 +129,17 @@ Use the code below to get started with the model.
 
 {{ results_summary | default("", true) }}
 
-## Model Examination [optional]
+## Model Examination
 
 <!-- Relevant interpretability work for the model goes here -->
 
 {{ model_examination | default("[More Information Needed]", true)}}
 
-## Environmental Impact
-
-<!-- Total emissions (in grams of CO2eq) and additional considerations, such as electricity usage, go here. Edit the suggested text below accordingly -->
-
-Carbon emissions can be estimated using the [Machine Learning Impact calculator](https://mlco2.github.io/impact#compute) presented in [Lacoste et al. (2019)](https://arxiv.org/abs/1910.09700).
-
-- **Hardware Type:** {{ hardware_type | default("[More Information Needed]", true)}}
-- **Hours used:** {{ hours_used | default("[More Information Needed]", true)}}
-- **Cloud Provider:** {{ cloud_provider | default("[More Information Needed]", true)}}
-- **Compute Region:** {{ cloud_region | default("[More Information Needed]", true)}}
-- **Carbon Emitted:** {{ co2_emitted | default("[More Information Needed]", true)}}
-
-## Technical Specifications [optional]
+## Technical Specifications
 
 ### Model Architecture and Objective
 
-{{ model_specs | default("[More Information Needed]", true)}}
+The base architecture is the RESNET-18 xxxxx <!-- model_specs -->
 
 ### Compute Infrastructure
 
@@ -160,33 +152,3 @@ Carbon emissions can be estimated using the [Machine Learning Impact calculator]
 #### Software
 
 {{ software | default("[More Information Needed]", true)}}
-
-## Citation [optional]
-
-<!-- If there is a paper or blog post introducing the model, the APA and Bibtex information for that should go in this section. -->
-
-**BibTeX:**
-
-{{ citation_bibtex | default("[More Information Needed]", true)}}
-
-**APA:**
-
-{{ citation_apa | default("[More Information Needed]", true)}}
-
-## Glossary [optional]
-
-<!-- If relevant, include terms and calculations in this section that can help readers understand the model or model card. -->
-
-{{ glossary | default("[More Information Needed]", true)}}
-
-## More Information [optional]
-
-{{ more_information | default("[More Information Needed]", true)}}
-
-## Model Card Authors [optional]
-
-{{ model_card_authors | default("[More Information Needed]", true)}}
-
-## Model Card Contact
-
-{{ model_card_contact | default("[More Information Needed]", true)}}
