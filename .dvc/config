@@ -1,0 +1,4 @@
+[core]
+    remote = storage
+['remote "storage"']
+    url = http://172.24.198.42:9001/browser/mlopsgr5/
