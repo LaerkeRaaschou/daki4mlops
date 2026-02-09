@@ -1,11 +1,11 @@
 ---
-# For reference on model card metadata, see the spec: https://github.com/huggingface/hub-docs/blob/main/modelcard.md?plain=1
-# Doc / guide: https://huggingface.co/docs/hub/model-cards
 {{ card_data }}
 ---
 
 # Model Card for {{ model_id | default("Model ID", true) }}
 
+model_id = RESNET-18-123
+model_summary = The goal of this model is to classify images.
 <!-- Provide a quick summary of what the model is/does. -->
 
 {{ model_summary | default("", true) }}
