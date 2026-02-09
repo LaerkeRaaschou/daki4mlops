@@ -7,7 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets
 
 class TinyImagenetTestset(Dataset):
-    def __init__(self, root, transform, annotations_path):
+    def __init__(self, root, transform, annotations_path, mapping_dict):
         # Find all paths to images inside the pathfolder
         self.image_paths = sorted(glob(os.path.join(root, "**", "*.JPEG"), recursive=True))
         self.transform = transform
@@ -20,6 +20,12 @@ class TinyImagenetTestset(Dataset):
                 filename = fields[0]
                 class_id = fields[1]
                 self.mapping[filename] = class_id
+
+        self.filename_to_train_id = {}
+        for filename, class_id in self.mapping.items():
+            if class_id not in mapping_dict:
+                raise ValueError(f"Class ID {class_id} not found in mapping dictionary.")
+            self.filename_to_train_id[filename] = int(mapping_dict[class_id])
     
     def __len__(self):
         return len(self.image_paths)
@@ -28,15 +34,15 @@ class TinyImagenetTestset(Dataset):
         # Decode path to image
         image_path = self.image_paths[index]
         img = decode_image(image_path)
-        # Map filename to class id
+        # Map filename to train id
         filename = Path(image_path).name
-        class_id = self.mapping[filename]
+        train_id = self.filename_to_train_id[filename]
 
         # Use transforms
         if self.transform:
             img = self.transform(img)
         
-        sample = (img, class_id)
+        sample = (img, train_id)
         return sample
 
 
@@ -74,16 +80,23 @@ def get_train_loader(mapping_path, train_dir, transform_train, batch_size, shuff
 
         if not mapping_path.exists():
             mapping_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             with open(mapping_path, "w") as f:
                 json.dump(train_dataset.class_to_idx, f, indent=2, sort_keys=True)
 
     return train_loader
 
-def get_test_loader(test_dir, test_annotations, transform_test, batch_size, shuffle):
+def get_test_loader(mapping_path, test_dir, test_annotations, transform_test, batch_size, shuffle):
     """ How to use the functions and methods in this module """
     # Test set made up of img and class_id
-    test_dataset = TinyImagenetTestset(root=test_dir, transform=transform_test, annotations_path=test_annotations)
+    mapping_path = Path(mapping_path)
+    if not mapping_path.exists():
+        raise FileNotFoundError(f"Mapping file not found: {mapping_path}")
+    
+    with open(mapping_path, "r") as f:
+        mapping_dict = json.load(f)  
+    
+    test_dataset = TinyImagenetTestset(root=test_dir, transform=transform_test, annotations_path=test_annotations, mapping_dict=mapping_dict)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=shuffle)
 
     return test_loader
