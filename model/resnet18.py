@@ -98,7 +98,7 @@ class ResNet18(nn.Module):
     
 
 if __name__ == '__main__':
-    tensor = torch.rand([3, 64, 64])
+    tensor = torch.rand([1, 3, 64, 64])
     model = ResNet18()
 
     # Total parameters and trainable parameters.
