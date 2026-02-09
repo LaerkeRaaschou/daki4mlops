@@ -1,4 +1,5 @@
 import os
+import json
 from glob import glob
 from pathlib import Path
 from torchvision.io import decode_image
@@ -62,11 +63,20 @@ def map_class_id_to_class_label(class_id, mapping_file):
     return class_label
 
 
-def get_train_loader(train_dir, transform_train, batch_size, shuffle):
+def get_train_loader(mapping_path, train_dir, transform_train, batch_size, shuffle):
 
     # Training set made up of img and train_id
     train_dataset = datasets.ImageFolder(root=train_dir, transform=transform_train)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
+
+    if mapping_path is not None:
+        mapping_path = Path(mapping_path)
+
+        if not mapping_path.exists():
+            mapping_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(mapping_path, "w") as f:
+                json.dump(train_dataset.class_to_idx, f, indent=2, sort_keys=True)
 
     return train_loader
 
