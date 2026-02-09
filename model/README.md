@@ -1,38 +1,36 @@
 ---
 {{ card_data }}
-model_id: RESNET-18-123
-model_summary: The goal of this model is to classify images.
+model_id: RESNET-18
+model_summary: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images.
+model_description: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images. With some more information.
+developers: Anne, Lærke og Stoyan
+model_type: Image classifier
+base_model: RESNET-18
+repo: https://github.com/LaerkeRaaschou/daki4mlops/blob/main/model/README.md
+bias_risks_limitations: The model has following bias and risk when used xxxx
 ---
 
-# Model Card for {{ model_id | default("Model ID", true) }}
-
-<!-- Provide a quick summary of what the model is/does. -->
-
-{{ model_summary | default("", true) }}
+<!-- model_id -->
+# Model Card for RESNET-18 
+<!-- model_summary -->
+Model summary: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images.
 
 ## Model Details
 
 ### Model Description
 
-<!-- Provide a longer summary of what this model is. -->
+<!-- model_description -->
+Model description: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images. With some more information.
 
-{{ model_description | default("", true) }}
-
-- **Developed by:** {{ developers | default("[More Information Needed]", true)}}
-- **Funded by [optional]:** {{ funded_by | default("[More Information Needed]", true)}}
-- **Shared by [optional]:** {{ shared_by | default("[More Information Needed]", true)}}
-- **Model type:** {{ model_type | default("[More Information Needed]", true)}}
-- **Language(s) (NLP):** {{ language | default("[More Information Needed]", true)}}
-- **License:** {{ license | default("[More Information Needed]", true)}}
-- **Finetuned from model [optional]:** {{ base_model | default("[More Information Needed]", true)}}
+- **Developed by: Anne, Lærke og Stoyan** <!-- developers -->
+- **Model type: Image Classifier** <!-- model_type -->
+- **Finetuned from model: RESNET-18:** <!-- base_model -->
 
 ### Model Sources [optional]
 
 <!-- Provide the basic links for the model. -->
 
-- **Repository:** {{ repo | default("[More Information Needed]", true)}}
-- **Paper [optional]:** {{ paper | default("[More Information Needed]", true)}}
-- **Demo [optional]:** {{ demo | default("[More Information Needed]", true)}}
+- **Repository: https://github.com/LaerkeRaaschou/daki4mlops/blob/main/model/README.md** <!-- repo -->
 
 ## Uses
 
@@ -44,12 +42,6 @@ model_summary: The goal of this model is to classify images.
 
 {{ direct_use | default("[More Information Needed]", true)}}
 
-### Downstream Use [optional]
-
-<!-- This section is for the model use when fine-tuned for a task, or when plugged into a larger ecosystem/app -->
-
-{{ downstream_use | default("[More Information Needed]", true)}}
-
 ### Out-of-Scope Use
 
 <!-- This section addresses misuse, malicious use, and uses that the model will not work well for. -->
@@ -60,7 +52,7 @@ model_summary: The goal of this model is to classify images.
 
 <!-- This section is meant to convey both technical and sociotechnical limitations. -->
 
-{{ bias_risks_limitations | default("[More Information Needed]", true)}}
+The model has following bias and risk when used xxxx <!-- bias_risks_limitations -->
 
 ### Recommendations
 
