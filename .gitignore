@@ -1,5 +1,8 @@
 data/tiny-imagenet-200
 .DS_Store
 .venv
-inference
 .vscode
+
+# Inference build artifacts (keep source/config/docs in repo)
+inference/build/
+inference/images/
