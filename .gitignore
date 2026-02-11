@@ -3,3 +3,6 @@ data/tiny-imagenet-200
 .venv
 inference
 .vscode
+wandb
+data/__pycache__
+model/__pycache__

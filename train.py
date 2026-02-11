@@ -79,7 +79,7 @@ def val_model(model, batches, device, epoch):
 def main():
 
     # Set variables
-    num_epochs = 10
+    num_epochs = 50
     batch_size = 64
     learning_rate = 1e-2
 
@@ -90,6 +90,9 @@ def main():
     if torch.cuda.is_available():
         device = torch.device("cuda")
         print("cuda")
+    elif torch.mps.is_available():
+        device = torch.device("mps")
+        print("mps")
     else:
         device = torch.device("cpu")
         print("cpu")
@@ -105,7 +108,7 @@ def main():
     optimizer = SGD(
         model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-4
     )
-    scheduler = StepLR(optimizer, step_size=3, gamma=0.1)
+    scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
 
     transform_train = transforms.Compose(
         [
@@ -116,6 +119,7 @@ def main():
     )
     # Train loader
     train_loader = get_train_loader(
+        mapping_path="data/mapping_path.json",
         train_dir=f"{data_path}/train",
         batch_size=batch_size,
         transform_train=transform_train,

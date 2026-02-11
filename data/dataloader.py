@@ -6,10 +6,13 @@ from torchvision.io import decode_image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets
 
+
 class TinyImagenetTestset(Dataset):
     def __init__(self, root, transform, annotations_path, mapping_dict):
         # Find all paths to images inside the pathfolder
-        self.image_paths = sorted(glob(os.path.join(root, "**", "*.JPEG"), recursive=True))
+        self.image_paths = sorted(
+            glob(os.path.join(root, "**", "*.JPEG"), recursive=True)
+        )
         self.transform = transform
         self.mapping = {}
 
@@ -24,9 +27,11 @@ class TinyImagenetTestset(Dataset):
         self.filename_to_train_id = {}
         for filename, class_id in self.mapping.items():
             if class_id not in mapping_dict:
-                raise ValueError(f"Class ID {class_id} not found in mapping dictionary.")
+                raise ValueError(
+                    f"Class ID {class_id} not found in mapping dictionary."
+                )
             self.filename_to_train_id[filename] = int(mapping_dict[class_id])
-    
+
     def __len__(self):
         return len(self.image_paths)
 
@@ -41,7 +46,7 @@ class TinyImagenetTestset(Dataset):
         # Use transforms
         if self.transform:
             img = self.transform(img)
-        
+
         sample = (img, train_id)
         return sample
 
@@ -52,6 +57,7 @@ def map_train_id_to_class_id(dataset, train_id):
     idx_to_class = {t: c for c, t in dataset.class_to_idx.items()}
     class_id = idx_to_class[train_id]
     return class_id
+
 
 def map_class_id_to_class_label(class_id, mapping_file):
     """Map dataset class_id to corresponding class label"""
@@ -86,17 +92,53 @@ def get_train_loader(mapping_path, train_dir, transform_train, batch_size, shuff
 
     return train_loader
 
-def get_test_loader(mapping_path, test_dir, test_annotations, transform_test, batch_size, shuffle):
-    """ How to use the functions and methods in this module """
+
+def get_test_loader(
+    mapping_path, test_dir, test_annotations, transform_test, batch_size, shuffle
+):
+    """How to use the functions and methods in this module"""
     # Test set made up of img and class_id
     mapping_path = Path(mapping_path)
     if not mapping_path.exists():
         raise FileNotFoundError(f"Mapping file not found: {mapping_path}")
-    
+
     with open(mapping_path, "r") as f:
-        mapping_dict = json.load(f)  
-    
-    test_dataset = TinyImagenetTestset(root=test_dir, transform=transform_test, annotations_path=test_annotations, mapping_dict=mapping_dict)
+        mapping_dict = json.load(f)
+
+    test_dataset = TinyImagenetTestset(
+        root=test_dir,
+        transform=transform_test,
+        annotations_path=test_annotations,
+        mapping_dict=mapping_dict,
+    )
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=shuffle)
 
     return test_loader
+
+
+def main():
+    from torchvision import transforms
+
+    data_path = "data/tiny-imagenet-200"
+
+    transform_train = transforms.Compose(
+        [
+            transforms.Resize((64, 64)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ]
+    )
+    # Train loader
+    train_loader = get_train_loader(
+        mapping_path="data/mapping_path.json",
+        train_dir=f"{data_path}/train",
+        batch_size=64,
+        transform_train=transform_train,
+        shuffle=True,
+    )
+    print(len(train_loader))
+    return ""
+
+
+if __name__ == "__main__":
+    main()
