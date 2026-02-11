@@ -15,3 +15,5 @@ training:
   - scheduler: steplr
   - step_size: 10
   - step_gamma: 0.5
+  - loss: cross_entropy
+  - label_smooting: 0.9
