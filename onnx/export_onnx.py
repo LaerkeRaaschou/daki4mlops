@@ -1,5 +1,5 @@
 import torch
-from inference.onnx.resnet18 import ResNet18   # <-- your file
+from ..model.resnet18 import ResNet18
 
 NUM_CLASSES = 200
 H, W = 64, 64
