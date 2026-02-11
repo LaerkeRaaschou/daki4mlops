@@ -108,7 +108,7 @@ def main():
     optimizer = SGD(
         model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-4
     )
-    scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
+    scheduler = StepLR(optimizer, step_size=10, gamma=0.5)
 
     transform_train = transforms.Compose(
         [
@@ -159,7 +159,11 @@ def main():
             f"Val Accuracy = {val_acc:.3f}. "
         )
 
-    torch.save(model.state_dict(), "resnet_18_classifier.pt")
+        if val_acc >= 0.99:
+            torch.save(
+                model.state_dict(), f"resnet_18_classifier_final_epoch{epoch}.pt"
+            )
+            break
 
 
 if __name__ == "__main__":
