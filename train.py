@@ -8,7 +8,6 @@ import wandb
 from torchvision import transforms
 
 
-
 def train_model(model, dataloader, optimizer, device, epoch):
     model.train()
     loss_function = nn.CrossEntropyLoss()
@@ -36,13 +35,17 @@ def train_model(model, dataloader, optimizer, device, epoch):
         total_loss += loss.item()
 
         if i % 200 == 0:
-            print("Train Epoch: %s, Iteration: %s, Train Loss: %s" % (epoch, i, loss.item()))
+            print(
+                "Train Epoch: %s, Iteration: %s, Train Loss: %s"
+                % (epoch, i, loss.item())
+            )
             wandb.log({"Train Loss": loss.item()})
 
     avg_loss = total_loss / len(dataloader)
     wandb.log({"Train Avg Loss": avg_loss})
 
     return avg_loss
+
 
 @torch.no_grad()
 def val_model(model, batches, device, epoch):
@@ -56,7 +59,7 @@ def val_model(model, batches, device, epoch):
     for x, y in batches:
         x = x.to(device)
         y = y.to(device)
-        
+
         y_pred = model(x)
         loss = loss_function(y_pred, y)
 
@@ -73,18 +76,15 @@ def val_model(model, batches, device, epoch):
     return avg_loss, acc
 
 
-
 def main():
 
     # Set variables
     num_epochs = 10
     batch_size = 64
     learning_rate = 1e-2
-    
 
     # Data path
     data_path = "data/tiny-imagenet-200"
-
 
     # Use device
     if torch.cuda.is_available():
@@ -94,25 +94,33 @@ def main():
         device = torch.device("cpu")
         print("cpu")
 
-
     # Start wandb
     wandb.login()
     wandb.init(project="tiny-imagenet-resnet18")
 
-
-    # Initialize model 
+    # Initialize model
     model = ResNet18(num_classes=200).to(device)
 
     # Define optimizer
-    optimizer = SGD(model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-4)
+    optimizer = SGD(
+        model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-4
+    )
     scheduler = StepLR(optimizer, step_size=3, gamma=0.1)
 
-    transform_train = transforms.Compose([transforms.Resize((64, 64)),
-                                          transforms.ToTensor(),
-                                          transforms.Normalize(mean=(0.485, 0.456, 0.406), 
-                                                               std=(0.229, 0.224, 0.225))])
+    transform_train = transforms.Compose(
+        [
+            transforms.Resize((64, 64)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ]
+    )
     # Train loader
-    train_loader = get_train_loader(train_dir=f"{data_path}/train", batch_size=batch_size, transform_train=transform_train, shuffle=True)
+    train_loader = get_train_loader(
+        train_dir=f"{data_path}/train",
+        batch_size=batch_size,
+        transform_train=transform_train,
+        shuffle=True,
+    )
 
     # Data check
     x0, y0 = next(iter(train_loader))
@@ -126,7 +134,7 @@ def main():
     print("\nModel check:")
     print("Output shape:", out.shape)
 
-    # Validation batch, 2 
+    # Validation batch, 2
     mini_val = []
     for i, (x, y) in enumerate(train_loader):
         mini_val.append((x, y))
