@@ -5,14 +5,14 @@ model_summary: The goal of this model is classifing images. It is trained on Tin
 model_description: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images. With some more information.
 developers: Anne, Lærke og Stoyan
 model_type: Image classifier
-base_model: RESNET-18
+base_arch: RESNET-18
 repo: https://github.com/LaerkeRaaschou/daki4mlops/blob/main/model/README.md
 
 
 bias_risks_limitations: The model has following bias and risk when used xxxx
 
-train_data: Training set from the Tiny-imagenet-200 dataset
-testing_data: Validation set from Tiny-imagenet-200 dataset
+training_data: For training the training set from the Tiny-imagenet-200 dataset is used. It contains XXXX.
+testing_data: For testing the validation set from Tiny-imagenet-200 dataset is used, containing XXXX.
 
 model_specs: The base architecture is the RESNET-18 xxxxx
 ---
@@ -29,7 +29,7 @@ Model description: The goal of this model is classifing images. It is trained on
 
 - **Developed by: Anne, Lærke og Stoyan** <!-- developers -->
 - **Model type: Image Classifier** <!-- model_type -->
-- **Finetuned from model: RESNET-18:** <!-- base_model -->
+- **Trained from architecture: RESNET-18** <!-- base_arch -->
 
 ### Model Sources
 <!-- Provide the basic links for the model. -->
@@ -58,31 +58,19 @@ Model description: The goal of this model is classifing images. It is trained on
 
 The model has following bias and risk when used xxxx <!-- bias_risks_limitations -->
 
-### Recommendations
-
-<!-- This section is meant to convey recommendations with respect to the bias, risk, and technical limitations. -->
-
-{{ bias_recommendations | default("Users (both direct and downstream) should be made aware of the risks, biases and limitations of the model. More information needed for further recommendations.", true)}}
-
-## How to Get Started with the Model
-
-Use the code below to get started with the model.
-
-{{ get_started_code | default("[More Information Needed]", true)}}
-
 ## Training Details
 
 ### Training Data
 
 <!-- This should link to a Dataset Card, perhaps with a short stub of information on what the training data is all about as well as documentation related to data pre-processing or additional filtering. -->
 
-{{ training_data | default("[More Information Needed]", true)}}
+For training the training set from the Tiny-imagenet-200 dataset is used. It contains XXXX. <!-- training_data -->
 
 ### Training Procedure
 
 <!-- This relates heavily to the Technical Specifications. Content here should link to that section when it is relevant to the training procedure. -->
 
-#### Preprocessing [optional]
+#### Preprocessing
 
 {{ preprocessing | default("[More Information Needed]", true)}}
 
@@ -91,7 +79,7 @@ Use the code below to get started with the model.
 
 - **Training regime:** {{ training_regime | default("[More Information Needed]", true)}} <!--fp32, fp16 mixed precision, bf16 mixed precision, bf16 non-mixed precision, fp16 non-mixed precision, fp8 mixed precision -->
 
-#### Speeds, Sizes, Times [optional]
+#### Speeds, Sizes, Times
 
 <!-- This section provides information about throughput, start/end time, checkpoint size if relevant, etc. -->
 
@@ -107,7 +95,7 @@ Use the code below to get started with the model.
 
 <!-- This should link to a Dataset Card if possible. -->
 
-testing_data: Validation set from Tiny-imagenet-200 dataset <!-- testing_data -->
+For testing the validation set from Tiny-imagenet-200 dataset is used, containing XXXX. <!-- testing_data -->
 
 #### Factors
 
