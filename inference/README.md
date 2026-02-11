@@ -37,8 +37,6 @@ Run
 2) Run the executable with the image path:
 	.\build\Release\resnet18_infer.exe ..\..\images\test.jpeg
 
-If your model or image paths are different, edit them in src/main.cpp.
-
 Files and their purpose
 - src/main.cpp: Minimal pipeline (load model, preprocess, run, print results)
 - src/cli.hpp/cpp: Tiny CLI parser for the image path
@@ -46,5 +44,4 @@ Files and their purpose
 - src/preprocess.hpp/cpp: OpenCV-based preprocessing (resize, RGB, normalize)
 
 Notes
-- The preprocessing uses ImageNet mean/std; this must match how the model was trained.
-- Paths are intentionally hardcoded for clarity in a first project.
+- Paths are intentionally hardcoded for clarity in a first project. Modify as needed until a better solution is implemented.
