@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 
 from model.resnet18 import ResNet18
 from data.dataloader import get_test_loader, map_class_id_to_class_label
-
+# test edit just to commit again
 def initialize_model(num_classes, weights_path):
     model = ResNet18(num_classes)
     if weights_path is None:
