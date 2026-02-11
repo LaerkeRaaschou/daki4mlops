@@ -1,8 +1,11 @@
 data/tiny-imagenet-200
 .DS_Store
 .venv
-inference
 .vscode
 wandb
 data/__pycache__
 model/__pycache__
+
+# Inference build artifacts (keep source/config/docs in repo)
+inference/build/
+inference/images/
