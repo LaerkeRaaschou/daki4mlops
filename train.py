@@ -3,14 +3,39 @@ import torch.nn as nn
 from torch.optim import SGD
 from torch.optim.lr_scheduler import StepLR
 from model.resnet18 import ResNet18
-from data.dataloader import get_train_loader
+from data.dataloader import get_train_val_loader
 import wandb
 from torchvision import transforms
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 
 
-def train_model(model, dataloader, optimizer, device, epoch):
+class EarlyStopping:
+    def __init__(self, patience, delta, verbose=False):
+        self.patience = patience
+        self.delta = delta
+        self.verbose = verbose
+        self.best_loss = None
+        self.no_improvement_count = 0
+        self.stop_training = False
+
+    def check_early_stop(self, val_loss):
+        if self.best_loss is None or val_loss < self.best_loss - self.delta:
+            self.best_loss = val_loss
+            self.no_improvement_count = 0
+        else:
+            self.no_improvement_count += 1
+            if self.verbose:
+                print(
+                    f"No improvement ({self.no_improvement_count}/{self.patience}). "
+                    f"Best: {self.best_loss:.4f}, Current: {val_loss:.4f}"
+                )
+            if self.no_improvement_count > self.patience:
+                self.stop_training = True
+            return self.stop_training
+
+
+def train_model(model, criterion, dataloader, optimizer, device, epoch):
     model.train()
-    loss_function = nn.CrossEntropyLoss()
 
     # Initialize
     total_loss = 0.0
@@ -22,7 +47,7 @@ def train_model(model, dataloader, optimizer, device, epoch):
         optimizer.zero_grad()
 
         y_pred = model(x)
-        loss = loss_function(y_pred, y)
+        loss = criterion(y_pred, y)
 
         if epoch == 1 and i == 0:
             print("\nFirst batch:")
@@ -48,32 +73,48 @@ def train_model(model, dataloader, optimizer, device, epoch):
 
 
 @torch.no_grad()
-def val_model(model, batches, device, epoch):
+def val_model(model, criterion, batches, device, epoch, num_classes=200):
     model.eval()
-    loss_function = nn.CrossEntropyLoss()
+    labels = list(range(num_classes))
+    all_preds = []
+    all_targets = []
 
     total_loss = 0.0
-    total_correct = 0
-    total_samples = 0
 
     for x, y in batches:
         x = x.to(device)
         y = y.to(device)
 
         y_pred = model(x)
-        loss = loss_function(y_pred, y)
+        loss = criterion(y_pred, y)
+        preds = torch.argmax(y_pred, dim=1)
 
         total_loss += loss.item()
-
-        preds = torch.argmax(y_pred, dim=1)
-        total_correct += (preds == y).sum().item()
-        total_samples += y.size(0)
+        all_preds.append(preds.cpu())
+        all_targets.append(y.cpu())
 
     avg_loss = total_loss / len(batches)
-    acc = total_correct / total_samples
+    y_pred = torch.cat(all_preds).numpy()
+    y_true = torch.cat(all_targets).numpy()
 
-    wandb.log({"Val Avg Loss": avg_loss, "Val Accuracy": acc, "Epoch": epoch})
-    return avg_loss, acc
+    accuracy = accuracy_score(y_true, y_pred)
+    precision = precision_score(
+        y_true, y_pred, labels=labels, average="macro", zero_division=0
+    )
+    recall = recall_score(
+        y_true, y_pred, labels=labels, average="macro", zero_division=0
+    )
+
+    wandb.log(
+        {
+            "Val Avg Loss": avg_loss,
+            "Val Accuracy": accuracy,
+            "precision": precision,
+            "recall": recall,
+            "Epoch": epoch,
+        }
+    )
+    return avg_loss, accuracy, precision, recall
 
 
 def main():
@@ -82,6 +123,7 @@ def main():
     num_epochs = 50
     batch_size = 64
     learning_rate = 1e-2
+    criterion = nn.CrossEntropyLoss()
 
     # Data path
     data_path = "data/tiny-imagenet-200"
@@ -104,7 +146,7 @@ def main():
     # Initialize model
     model = ResNet18(num_classes=200).to(device)
 
-    # Define optimizer instantiate(cfg.optimizer, params=model.parameters())
+    # Define optimizer
     optimizer = SGD(
         model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-4
     )
@@ -118,12 +160,12 @@ def main():
         ]
     )
     # Train loader
-    train_loader = get_train_loader(
+    train_loader, val_dataset = get_train_val_loader(
         mapping_path="data/mapping_path.json",
         train_dir=f"{data_path}/train",
         batch_size=batch_size,
         transform_train=transform_train,
-        shuffle=True,
+        val_split_size=10,
     )
 
     # Data check
@@ -138,16 +180,15 @@ def main():
     print("\nModel check:")
     print("Output shape:", out.shape)
 
-    # Validation batch, 2
-    mini_val = []
-    for i, (x, y) in enumerate(train_loader):
-        mini_val.append((x, y))
-        if i == 1:
-            break
+    early_stopping = EarlyStopping(patience=5, delta=0.01, verbose=True)
 
     for epoch in range(1, num_epochs + 1):
-        train_loss = train_model(model, train_loader, optimizer, device, epoch)
-        val_loss, val_acc = val_model(model, mini_val, device, epoch)
+        train_loss = train_model(
+            model, criterion, train_loader, optimizer, device, epoch
+        )
+        val_loss, val_acc, val_precision, val_recall = val_model(
+            model, criterion, val_dataset, device, epoch
+        )
 
         scheduler.step()
         print("Current LR:", optimizer.param_groups[0]["lr"])
@@ -157,13 +198,20 @@ def main():
             f"Train Loss = {train_loss:.4f}. "
             f"Val Loss = {val_loss:.4f}. "
             f"Val Accuracy = {val_acc:.3f}. "
+            f"Val Precision = {val_precision:.3f}."
+            f"Val Recall = {val_recall:.3f}."
         )
 
-        if val_acc >= 0.99:
+        early_stopping.check_early_stop(val_loss)
+
+        if early_stopping.stop_training:
+            print(f"Early stopping at epoch {epoch}")
             torch.save(
                 model.state_dict(), f"resnet_18_classifier_final_epoch{epoch}.pt"
             )
             break
+
+    torch.save(model.state_dict(), f"resnet_18_classifier_final_epoch{epoch}.pt")
 
 
 if __name__ == "__main__":

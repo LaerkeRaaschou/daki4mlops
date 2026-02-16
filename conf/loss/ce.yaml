@@ -1,0 +1,2 @@
+_target_: nn.CrossEntropyLoss()
+label_smooting: 0.9

@@ -3,7 +3,7 @@ import json
 from glob import glob
 from pathlib import Path
 from torchvision.io import decode_image
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision import datasets
 
 
@@ -75,11 +75,20 @@ def map_class_id_to_class_label(class_id, mapping_file):
     return class_label
 
 
-def get_train_loader(mapping_path, train_dir, transform_train, batch_size, shuffle):
+def get_train_val_loader(
+    mapping_path, train_dir, transform_train, batch_size, val_split_size
+):
 
     # Training set made up of img and train_id
-    train_dataset = datasets.ImageFolder(root=train_dir, transform=transform_train)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
+    dataset = datasets.ImageFolder(root=train_dir, transform=transform_train)
+
+    val_size = len(dataset) // val_split_size
+    train_size = len(dataset) - val_size
+
+    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     if mapping_path is not None:
         mapping_path = Path(mapping_path)
@@ -88,9 +97,9 @@ def get_train_loader(mapping_path, train_dir, transform_train, batch_size, shuff
             mapping_path.parent.mkdir(parents=True, exist_ok=True)
 
             with open(mapping_path, "w") as f:
-                json.dump(train_dataset.class_to_idx, f, indent=2, sort_keys=True)
+                json.dump(dataset.class_to_idx, f, indent=2, sort_keys=True)
 
-    return train_loader
+    return train_loader, val_loader
 
 
 def get_test_loader(
@@ -114,31 +123,3 @@ def get_test_loader(
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=shuffle)
 
     return test_loader
-
-
-def main():
-    from torchvision import transforms
-
-    data_path = "data/tiny-imagenet-200"
-
-    transform_train = transforms.Compose(
-        [
-            transforms.Resize((64, 64)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-        ]
-    )
-    # Train loader
-    train_loader = get_train_loader(
-        mapping_path="data/mapping_path.json",
-        train_dir=f"{data_path}/train",
-        batch_size=64,
-        transform_train=transform_train,
-        shuffle=True,
-    )
-    print(len(train_loader))
-    return ""
-
-
-if __name__ == "__main__":
-    main()
