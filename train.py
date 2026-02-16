@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 from torch.optim import SGD
 from torch.optim.lr_scheduler import StepLR
 from model.resnet18 import ResNet18
@@ -7,6 +6,8 @@ from data.dataloader import get_train_val_loader
 import wandb
 from torchvision import transforms
 from sklearn.metrics import accuracy_score, precision_score, recall_score
+import hydra
+from hydra.utils import instantiate
 
 
 class EarlyStopping:
@@ -117,13 +118,15 @@ def val_model(model, criterion, batches, device, epoch, num_classes=200):
     return avg_loss, accuracy, precision, recall
 
 
-def main():
+@hydra.main(config_path="conf", config_name="config", version_base=None)
+def main(cfg):
+    torch.manual_seed(cfg.seed)
 
     # Set variables
-    num_epochs = 50
-    batch_size = 64
-    learning_rate = 1e-2
-    criterion = nn.CrossEntropyLoss()
+    num_epochs = cfg.trainer.epochs
+    batch_size = cfg.data.batch_size
+    learning_rate = cfg.trainer.lr
+    criterion = instantiate(cfg.ce)
 
     # Data path
     data_path = "data/tiny-imagenet-200"

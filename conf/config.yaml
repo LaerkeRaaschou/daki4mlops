@@ -5,6 +5,7 @@ default:
   - trainer: default
   - scheduler: steplr
   - loss: ce
+  - _self_
 
 seed: 42
 device: cuda
