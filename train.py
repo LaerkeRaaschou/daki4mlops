@@ -104,7 +104,7 @@ def main():
     # Initialize model
     model = ResNet18(num_classes=200).to(device)
 
-    # Define optimizer
+    # Define optimizer instantiate(cfg.optimizer, params=model.parameters())
     optimizer = SGD(
         model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-4
     )
