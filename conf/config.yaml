@@ -1,5 +1,4 @@
 defaults:
-  - model: resnet
   - data: tiny_imagenet
   - optimizer: sgd
   - trainer: default

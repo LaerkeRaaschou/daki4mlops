@@ -1,12 +1,5 @@
 root: data/tiny-imagenet-200
-
-train_dir: ${data.root}/train
-test_dir: ${data.root}/val
-
-words_file: ${data.root}/words.txt
-test_annotations: ${data.test_dir}/val_annotations.txt
 mapping_path: data/mapping_path.json
 
 batch_size: 64
-num_workers: 1
 val_split: 0.1
