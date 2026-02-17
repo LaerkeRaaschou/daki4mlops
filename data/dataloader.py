@@ -3,8 +3,9 @@ import json
 from glob import glob
 from pathlib import Path
 from torchvision.io import decode_image
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import datasets
+import torch
 
 
 class TinyImagenetTestset(Dataset):
@@ -76,16 +77,34 @@ def map_class_id_to_class_label(class_id, mapping_file):
 
 
 def get_train_val_loader(
-    mapping_path, train_dir, transform_train, batch_size, val_split_size
+    mapping_path,
+    train_dir,
+    transform_train,
+    transform_val,
+    batch_size,
+    val_split_size,
+    seed,
 ):
 
     # Training set made up of img and train_id
-    dataset = datasets.ImageFolder(root=train_dir, transform=transform_train)
+    train_dataset_full = datasets.ImageFolder(root=train_dir, transform=transform_train)
+    val_dataset_full = datasets.ImageFolder(root=train_dir, transform=transform_val)
 
-    val_size = len(dataset) // val_split_size
-    train_size = len(dataset) - val_size
+    n = len(train_dataset_full)
+    val_size = round(n * val_split_size)
+    train_size = n - val_size
 
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+    # Create random reproducible shuffle of idx
+    generator = torch.Generator().manual_seed(seed)
+    perm = torch.randperm(n, generator=generator).tolist()
+
+    # Take idx for train and val set
+    train_idx = perm[:train_size]
+    val_idx = perm[train_size:]
+
+    # Create subset of random datasplit
+    train_dataset = Subset(train_dataset_full, train_idx)
+    val_dataset = Subset(val_dataset_full, val_idx)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
@@ -97,7 +116,7 @@ def get_train_val_loader(
             mapping_path.parent.mkdir(parents=True, exist_ok=True)
 
             with open(mapping_path, "w") as f:
-                json.dump(dataset.class_to_idx, f, indent=2, sort_keys=True)
+                json.dump(train_dataset_full.class_to_idx, f, indent=2, sort_keys=True)
 
     return train_loader, val_loader
 

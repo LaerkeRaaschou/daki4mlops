@@ -135,8 +135,8 @@ def main(cfg):
         print("cpu")
 
     # Start wandb
-    # wandb.login()
-    # wandb.init(project="tiny-imagenet-resnet18")
+    wandb.login()
+    wandb.init(project="tiny-imagenet-resnet18")
 
     # Initialize model
     model = ResNet18(num_classes=200).to(device)
@@ -157,13 +157,16 @@ def main(cfg):
             transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ]
     )
+
     # Train loader
     train_loader, val_loader = get_train_val_loader(
-        mapping_path="data/mapping_path.json",
+        mapping_path=cfg.data.mapping_path,
         train_dir=f"{data_path}/train",
-        batch_size=cfg.data.batch_size,
         transform_train=transform_train,
-        val_split_size=10,
+        transform_val=transform_train,
+        batch_size=cfg.data.batch_size,
+        val_split_size=cfg.data.val_split,
+        seed=cfg.seed,
     )
 
     # Data check train

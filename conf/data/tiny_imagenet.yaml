@@ -5,7 +5,7 @@ test_dir: ${data.root}/val
 
 words_file: ${data.root}/words.txt
 test_annotations: ${data.test_dir}/val_annotations.txt
-mapping_path: $data/mapping_path.json
+mapping_path: data/mapping_path.json
 
 batch_size: 64
 num_workers: 1
