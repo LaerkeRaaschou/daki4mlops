@@ -1,12 +1,11 @@
 import torch
-import torch.nn as nn
-from torch.optim import SGD
-from torch.optim.lr_scheduler import StepLR
 from model.resnet18 import ResNet18
 from data.dataloader import get_train_val_loader
 import wandb
 from torchvision import transforms
 from sklearn.metrics import accuracy_score, precision_score, recall_score
+import hydra
+from hydra.utils import instantiate
 
 
 class EarlyStopping:
@@ -18,17 +17,19 @@ class EarlyStopping:
         self.no_improvement_count = 0
         self.stop_training = False
 
-    def check_early_stopping(self, val_loss):
+    def check_early_stop(self, val_loss):
         if self.best_loss is None or val_loss < self.best_loss - self.delta:
             self.best_loss = val_loss
             self.no_improvement_count = 0
         else:
             self.no_improvement_count += 1
-            self.stop_training = True
             if self.verbose:
                 print(
-                    f"Stopping training as no improvement has been observed for {self.delta} epochs"
+                    f"No improvement ({self.no_improvement_count}/{self.patience}). "
+                    f"Best: {self.best_loss:.4f}, Current: {val_loss:.4f}"
                 )
+            if self.no_improvement_count > self.patience:
+                self.stop_training = True
             return self.stop_training
 
 
@@ -71,8 +72,9 @@ def train_model(model, criterion, dataloader, optimizer, device, epoch):
 
 
 @torch.no_grad()
-def val_model(model, criterion, batches, device, epoch):
+def val_model(model, criterion, batches, device, epoch, num_classes=200):
     model.eval()
+    labels = list(range(num_classes))
     all_preds = []
     all_targets = []
 
@@ -95,8 +97,12 @@ def val_model(model, criterion, batches, device, epoch):
     y_true = torch.cat(all_targets).numpy()
 
     accuracy = accuracy_score(y_true, y_pred)
-    precision = precision_score(y_true, y_pred, average="macro")
-    recall = recall_score(y_true, y_pred, average="macro")
+    precision = precision_score(
+        y_true, y_pred, labels=labels, average="macro", zero_division=0
+    )
+    recall = recall_score(
+        y_true, y_pred, labels=labels, average="macro", zero_division=0
+    )
 
     wandb.log(
         {
@@ -110,16 +116,12 @@ def val_model(model, criterion, batches, device, epoch):
     return avg_loss, accuracy, precision, recall
 
 
-def main():
-
-    # Set variables
-    num_epochs = 50
-    batch_size = 64
-    learning_rate = 1e-2
-    criterion = nn.CrossEntropyLoss()
+@hydra.main(config_path="conf", config_name="config", version_base=None)
+def main(cfg):
+    torch.manual_seed(cfg.seed)
 
     # Data path
-    data_path = "data/tiny-imagenet-200"
+    data_path = cfg.data.root
 
     # Use device
     if torch.cuda.is_available():
@@ -137,10 +139,13 @@ def main():
     model = ResNet18(num_classes=200).to(device)
 
     # Define optimizer
-    optimizer = SGD(
-        model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-4
-    )
-    scheduler = StepLR(optimizer, step_size=10, gamma=0.5)
+    optimizer = instantiate(cfg.optimizer, params=model.parameters())
+
+    scheduler = None
+    if cfg.scheduler.use:
+        scheduler = instantiate(cfg.scheduler.cfg, optimizer=optimizer)
+
+    criterion = instantiate(cfg.loss)
 
     transform_train = transforms.Compose(
         [
@@ -149,17 +154,27 @@ def main():
             transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ]
     )
+
     # Train loader
-    train_loader, val_dataset = get_train_val_loader(
-        mapping_path="data/mapping_path.json",
+    train_loader, val_loader = get_train_val_loader(
+        mapping_path=cfg.data.mapping_path,
         train_dir=f"{data_path}/train",
-        batch_size=batch_size,
         transform_train=transform_train,
-        val_split_size=10,
+        transform_val=transform_train,
+        batch_size=cfg.data.batch_size,
+        val_split_size=cfg.data.val_split,
+        seed=cfg.seed,
     )
 
-    # Data check
+    # Data check train
     x0, y0 = next(iter(train_loader))
+    print("\nData check:")
+    print("Input shape:", x0.shape)
+    print("Labels shape:", y0.shape)
+    print("Label range:", y0.min().item(), "to", y0.max().item())
+
+    # Data check val
+    x0, y0 = next(iter(val_loader))
     print("\nData check:")
     print("Input shape:", x0.shape)
     print("Labels shape:", y0.shape)
@@ -170,18 +185,19 @@ def main():
     print("\nModel check:")
     print("Output shape:", out.shape)
 
-    early_stopping = EarlyStopping(patience=5, delta=0.01, verbose=False)
+    early_stopping = EarlyStopping(patience=5, delta=0.01, verbose=True)
 
-    for epoch in range(1, num_epochs + 1):
+    for epoch in range(1, cfg.trainer.epochs + 1):
         train_loss = train_model(
             model, criterion, train_loader, optimizer, device, epoch
         )
         val_loss, val_acc, val_precision, val_recall = val_model(
-            model, criterion, val_dataset, device, epoch
+            model, criterion, val_loader, device, epoch
         )
 
-        scheduler.step()
         print("Current LR:", optimizer.param_groups[0]["lr"])
+        if cfg.scheduler.use:
+            scheduler.step()
 
         print(
             f"Epoch {epoch}. "
@@ -201,7 +217,7 @@ def main():
             )
             break
 
-        torch.save(model.state_dict(), f"resnet_18_classifier_final_epoch{epoch}.pt")
+    torch.save(model.state_dict(), f"resnet_18_classifier_final_epoch{epoch}.pt")
 
 
 if __name__ == "__main__":

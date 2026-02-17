@@ -1,17 +1,9 @@
-data:
-  - dataset: tiny_imagenet
-  - path: data/tiny-imagenet-200
-
-model:
-  - arc: resnet18
-
-training:
-  - batch_size: 64
-  - lr: 1e-2
-  - optim: sgd
-  - optim_momentum: 0.9
-  - optim_weight_decay: 5e-4
-  - num_epochs: 50
+defaults:
+  - data: tiny_imagenet
+  - optimizer: sgd
+  - trainer: default
   - scheduler: steplr
-  - step_size: 10
-  - step_gamma: 0.5
+  - loss: ce
+  - _self_
+
+seed: 42

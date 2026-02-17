@@ -15,6 +15,13 @@ class Model:
 @dataclass
 class TrainingParam:
     batch_size: int
-    optim: str
-    num_epochs: int
     lr: float
+    num_epochs: int
+    optim: str
+    optim_momentum: float
+    optim_weight_decay: float
+    scheduler: str
+    step_size: int
+    step_gamme: float
+    loss: str
+    label_smooting: float
