@@ -125,8 +125,8 @@ def main(cfg):
     # Set variables
     num_epochs = cfg.trainer.epochs
     batch_size = cfg.data.batch_size
-    learning_rate = cfg.trainer.lr
-    criterion = instantiate(cfg.ce)
+    learning_rate = cfg.optimizer.lr
+    criterion = instantiate(cfg.loss)
 
     # Data path
     data_path = "data/tiny-imagenet-200"

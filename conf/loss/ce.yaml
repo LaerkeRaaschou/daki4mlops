@@ -1,2 +1,2 @@
-_target_: nn.CrossEntropyLoss
-label_smooting: 0.9
+_target_: torch.nn.CrossEntropyLoss
+label_smoothing: 0.1

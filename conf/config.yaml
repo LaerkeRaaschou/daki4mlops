@@ -1,4 +1,4 @@
-default:
+defaults:
   - model: resnet
   - data: tiny_imagenet
   - optimizer: sgd
