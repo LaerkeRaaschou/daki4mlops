@@ -1,6 +1,4 @@
 import torch
-from torch.optim import SGD
-from torch.optim.lr_scheduler import StepLR
 from model.resnet18 import ResNet18
 from data.dataloader import get_train_val_loader
 import wandb
@@ -122,14 +120,8 @@ def val_model(model, criterion, batches, device, epoch, num_classes=200):
 def main(cfg):
     torch.manual_seed(cfg.seed)
 
-    # Set variables
-    num_epochs = cfg.trainer.epochs
-    batch_size = cfg.data.batch_size
-    learning_rate = cfg.optimizer.lr
-    criterion = instantiate(cfg.loss)
-
     # Data path
-    data_path = "data/tiny-imagenet-200"
+    data_path = cfg.data.root
 
     # Use device
     if torch.cuda.is_available():
@@ -143,17 +135,20 @@ def main(cfg):
         print("cpu")
 
     # Start wandb
-    wandb.login()
-    wandb.init(project="tiny-imagenet-resnet18")
+    # wandb.login()
+    # wandb.init(project="tiny-imagenet-resnet18")
 
     # Initialize model
     model = ResNet18(num_classes=200).to(device)
 
     # Define optimizer
-    optimizer = SGD(
-        model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-4
-    )
-    scheduler = StepLR(optimizer, step_size=10, gamma=0.5)
+    optimizer = instantiate(cfg.optimizer, params=model.parameters())
+
+    scheduler = None
+    if cfg.scheduler.use:
+        scheduler = instantiate(cfg.scheduler.cfg, optimizer=optimizer)
+
+    criterion = instantiate(cfg.loss)
 
     transform_train = transforms.Compose(
         [
@@ -163,16 +158,23 @@ def main(cfg):
         ]
     )
     # Train loader
-    train_loader, val_dataset = get_train_val_loader(
+    train_loader, val_loader = get_train_val_loader(
         mapping_path="data/mapping_path.json",
         train_dir=f"{data_path}/train",
-        batch_size=batch_size,
+        batch_size=cfg.data.batch_size,
         transform_train=transform_train,
         val_split_size=10,
     )
 
-    # Data check
+    # Data check train
     x0, y0 = next(iter(train_loader))
+    print("\nData check:")
+    print("Input shape:", x0.shape)
+    print("Labels shape:", y0.shape)
+    print("Label range:", y0.min().item(), "to", y0.max().item())
+
+    # Data check val
+    x0, y0 = next(iter(val_loader))
     print("\nData check:")
     print("Input shape:", x0.shape)
     print("Labels shape:", y0.shape)
@@ -185,16 +187,17 @@ def main(cfg):
 
     early_stopping = EarlyStopping(patience=5, delta=0.01, verbose=True)
 
-    for epoch in range(1, num_epochs + 1):
+    for epoch in range(1, cfg.trainer.epochs + 1):
         train_loss = train_model(
             model, criterion, train_loader, optimizer, device, epoch
         )
         val_loss, val_acc, val_precision, val_recall = val_model(
-            model, criterion, val_dataset, device, epoch
+            model, criterion, val_loader, device, epoch
         )
 
-        scheduler.step()
         print("Current LR:", optimizer.param_groups[0]["lr"])
+        if cfg.scheduler.use:
+            scheduler.step()
 
         print(
             f"Epoch {epoch}. "
