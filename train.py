@@ -33,7 +33,9 @@ class EarlyStopping:
             return self.stop_training
 
 
-def train_model(model, criterion, dataloader, optimizer, device, epoch):
+def train_model(
+    model, criterion, dataloader, optimizer, device, epoch, device_type, scaler=None
+):
     model.train()
 
     # Initialize
@@ -45,16 +47,20 @@ def train_model(model, criterion, dataloader, optimizer, device, epoch):
 
         optimizer.zero_grad()
 
-        y_pred = model(x)
-        loss = criterion(y_pred, y)
+        if scaler is not None:
+            with torch.amp.autocast(device_type):
+                y_pred = model(x)
+                loss = criterion(y_pred, y)
 
-        if epoch == 1 and i == 0:
-            print("\nFirst batch:")
-            print("Predicted shape:", y_pred.shape)
-            print("Loss:", loss.item())
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            y_pred = model(x)
+            loss = criterion(y_pred, y)
 
-        loss.backward()
-        optimizer.step()
+            loss.backward()
+            optimizer.step()
 
         total_loss += loss.item()
 
@@ -147,6 +153,10 @@ def main(cfg):
 
     criterion = instantiate(cfg.loss)
 
+    scaler = None
+    if cfg.amp.use and cfg.device == "cuda":
+        scaler = instantiate(cfg.amp.cfg)
+
     transform_train = transforms.Compose(
         [
             transforms.Resize((64, 64)),
@@ -194,7 +204,7 @@ def main(cfg):
 
     for epoch in range(1, cfg.trainer.epochs + 1):
         train_loss = train_model(
-            model, criterion, train_loader, optimizer, device, epoch
+            model, criterion, train_loader, optimizer, device, epoch, cfg.device, scaler
         )
         val_loss, val_acc, val_precision, val_recall = val_model(
             model, criterion, val_loader, device, epoch
