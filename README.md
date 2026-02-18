@@ -9,5 +9,5 @@
 2. Activate virtual enviroment:
     $ source .venv/bin/activate
 3. Install requirements:
-    $ python -m pip install -r requirements.txt requirements-dev.txt
+    $ python -m pip install -r requirements-dev.txt
 4. All good to go!

@@ -10,3 +10,6 @@ inference/build/
 inference/images/
 
 .python-version
+__pycache__
+.pytest_cache
+.coverage
