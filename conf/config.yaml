@@ -4,6 +4,7 @@ defaults:
   - trainer: default
   - scheduler: steplr
   - loss: ce
+  - earlystopping: default
   - _self_
 
 seed: 42

@@ -185,7 +185,12 @@ def main(cfg):
     print("\nModel check:")
     print("Output shape:", out.shape)
 
-    early_stopping = EarlyStopping(patience=5, delta=0.01, verbose=True)
+    if cfg.earlystopping.use:
+        early_stopping = EarlyStopping(
+            cfg.earlystopping.patience,
+            cfg.earlystopping.delta,
+            cfg.earlystopping.verbose,
+        )
 
     for epoch in range(1, cfg.trainer.epochs + 1):
         train_loss = train_model(
@@ -208,7 +213,8 @@ def main(cfg):
             f"Val Recall = {val_recall:.3f}."
         )
 
-        early_stopping.check_early_stop(val_loss)
+        if cfg.earlystopping.use:
+            early_stopping.check_early_stop(val_loss)
 
         if early_stopping.stop_training:
             print(f"Early stopping at epoch {epoch}")
