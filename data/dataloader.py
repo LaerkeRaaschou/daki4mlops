@@ -6,6 +6,7 @@ from torchvision.io import decode_image
 from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import datasets
 import torch
+from torch.utils.data.distributed import DistributedSampler
 
 
 class TinyImagenetTestset(Dataset):
@@ -76,21 +77,25 @@ def map_class_id_to_class_label(class_id, mapping_file):
     return class_label
 
 
-def get_train_val_loader(
-    mapping_path,
-    train_dir,
-    transform_train,
-    transform_val,
-    batch_size,
-    val_split_size,
-    seed,
+def get_dataset(train_dir, transform, mapping_path):
+    dataset = datasets.ImageFolder(root=train_dir, transform=transform)
+
+    if mapping_path is not None:
+        mapping_path = Path(mapping_path)
+
+        if not mapping_path.exists():
+            mapping_path.parent.mkdir(parents=True, exist_ok=True)
+
+            with open(mapping_path, "w") as f:
+                json.dump(dataset.class_to_idx, f, indent=2, sort_keys=True)
+
+    return dataset
+
+
+def get_loaders(
+    train_set, val_set, batch_size, val_split_size, seed, world_size=None, rank=None
 ):
-
-    # Training set made up of img and train_id
-    train_dataset_full = datasets.ImageFolder(root=train_dir, transform=transform_train)
-    val_dataset_full = datasets.ImageFolder(root=train_dir, transform=transform_val)
-
-    n = len(train_dataset_full)
+    n = len(train_set)
     val_size = round(n * val_split_size)
     train_size = n - val_size
 
@@ -103,22 +108,29 @@ def get_train_val_loader(
     val_idx = perm[train_size:]
 
     # Create subset of random datasplit
-    train_dataset = Subset(train_dataset_full, train_idx)
-    val_dataset = Subset(val_dataset_full, val_idx)
+    train_dataset = Subset(train_set, train_idx)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    sampler = None
+    if world_size is not None and rank is not None:
+        sampler = DistributedSampler(
+            train_dataset,
+            num_replicas=world_size,
+            rank=rank,
+            shuffle=True,
+            drop_last=False,
+        )
+
+    val_dataset = Subset(val_set, val_idx)
+
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        num_workers=4,
+        shuffle=(sampler is None),
+        sampler=sampler,
+    )
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-
-    if mapping_path is not None:
-        mapping_path = Path(mapping_path)
-
-        if not mapping_path.exists():
-            mapping_path.parent.mkdir(parents=True, exist_ok=True)
-
-            with open(mapping_path, "w") as f:
-                json.dump(train_dataset_full.class_to_idx, f, indent=2, sort_keys=True)
-
-    return train_loader, val_loader
+    return train_loader, val_loader, sampler
 
 
 def get_test_loader(
