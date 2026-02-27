@@ -1,11 +1,18 @@
 import torch
 from model.resnet18 import ResNet18
-from data.dataloader import get_train_val_loader
+from data.dataloader import get_dataset, get_loaders
 import wandb
 from torchvision import transforms
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 import hydra
 from hydra.utils import instantiate
+from torch.nn.parallel import DistributedDataParallel as DDP
+import os
+import torch.distributed as dist
+
+
+def is_distributed():
+    return "RANK" in os.environ and "WORLD_SIZE" in os.environ
 
 
 class EarlyStopping:
@@ -33,11 +40,22 @@ class EarlyStopping:
             return self.stop_training
 
 
-def train_model(model, criterion, dataloader, optimizer, device, epoch):
+def train_model(
+    model,
+    criterion,
+    dataloader,
+    optimizer,
+    device,
+    epoch,
+    device_type,
+    local_rank,
+    scaler=None,
+):
     model.train()
 
     # Initialize
-    total_loss = 0.0
+    total_loss = torch.tensor(0.0, device=device)
+    num_batches = torch.tensor(0.0, device=device)
 
     for i, (x, y) in enumerate(dataloader):
         x = x.to(device)
@@ -45,28 +63,40 @@ def train_model(model, criterion, dataloader, optimizer, device, epoch):
 
         optimizer.zero_grad()
 
-        y_pred = model(x)
-        loss = criterion(y_pred, y)
+        if scaler is not None:
+            with torch.amp.autocast(device_type):
+                y_pred = model(x)
+                loss = criterion(y_pred, y)
 
-        if epoch == 1 and i == 0:
-            print("\nFirst batch:")
-            print("Predicted shape:", y_pred.shape)
-            print("Loss:", loss.item())
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            y_pred = model(x)
+            loss = criterion(y_pred, y)
 
-        loss.backward()
-        optimizer.step()
+            loss.backward()
+            optimizer.step()
 
         total_loss += loss.item()
 
-        if i % 200 == 0:
+        if i % 200 == 0 and local_rank == 0:
             print(
                 "Train Epoch: %s, Iteration: %s, Train Loss: %s"
                 % (epoch, i, loss.item())
             )
             wandb.log({"Train Loss": loss.item()})
 
-    avg_loss = total_loss / len(dataloader)
-    wandb.log({"Train Avg Loss": avg_loss})
+        total_loss += loss.detach()
+        num_batches += 1
+
+    if dist.is_initialized():
+        dist.all_reduce(total_loss, op=dist.ReduceOp.SUM)
+        dist.all_reduce(num_batches, op=dist.ReduceOp.SUM)
+    avg_loss = (total_loss / num_batches).item()
+
+    if local_rank == 0:
+        wandb.log({"Train Avg Loss": avg_loss})
 
     return avg_loss
 
@@ -123,20 +153,33 @@ def main(cfg):
     # Data path
     data_path = cfg.data.root
 
-    # Use device
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-        print("cuda")
-    else:
-        device = torch.device("cpu")
-        print("cpu")
+    # Set up for multiple gpus
+    use_ddp = is_distributed()
+    if use_ddp:
+        dist.init_process_group("nccl")
+        local_rank = int(os.environ["LOCAL_RANK"])
 
-    # Start wandb
-    wandb.login()
-    wandb.init(project="tiny-imagenet-resnet18")
+        torch.cuda.set_device(local_rank)
+        device = torch.device("cuda", local_rank)
+        rank = int(os.environ["RANK"])
+        world_size = int(os.environ["WORLD_SIZE"])
+    else:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        local_rank = 0
+        rank = 0
+        world_size = 1
+
+    if local_rank == 0:
+        # Start wandb
+        wandb.login()
+        wandb.init(project="tiny-imagenet-resnet18")
 
     # Initialize model
     model = ResNet18(num_classes=200).to(device)
+    if cfg.compile:
+        model = torch.compile(model, backend="eager")
+    if use_ddp:
+        model = DDP(model, device_ids=[local_rank])
 
     # Define optimizer
     optimizer = instantiate(cfg.optimizer, params=model.parameters())
@@ -147,6 +190,10 @@ def main(cfg):
 
     criterion = instantiate(cfg.loss)
 
+    scaler = None
+    if cfg.amp.use and cfg.device == "cuda":
+        scaler = instantiate(cfg.amp.cfg)
+
     transform_train = transforms.Compose(
         [
             transforms.Resize((64, 64)),
@@ -155,35 +202,57 @@ def main(cfg):
         ]
     )
 
-    # Train loader
-    train_loader, val_loader = get_train_val_loader(
-        mapping_path=cfg.data.mapping_path,
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(64, scale=(0.7, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ColorJitter(0.2, 0.2, 0.2, 0.1),  # optional
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ]
+    )
+
+    # Train data and val data
+    train_dataset = get_dataset(
         train_dir=f"{data_path}/train",
-        transform_train=transform_train,
-        transform_val=transform_train,
+        transform=transform_train,
+        mapping_path=cfg.data.mapping_path,
+    )
+
+    val_dataset = get_dataset(
+        train_dir=f"{data_path}/train", transform=transform_train, mapping_path=None
+    )
+
+    train_loader, val_loader, sampler = get_loaders(
+        train_set=train_dataset,
+        val_set=val_dataset,
         batch_size=cfg.data.batch_size,
         val_split_size=cfg.data.val_split,
         seed=cfg.seed,
+        world_size=world_size,
+        rank=rank,
     )
+    print(f"Rank {rank} num_batches = {len(train_loader)}")
 
-    # Data check train
-    x0, y0 = next(iter(train_loader))
-    print("\nData check:")
-    print("Input shape:", x0.shape)
-    print("Labels shape:", y0.shape)
-    print("Label range:", y0.min().item(), "to", y0.max().item())
+    if local_rank == 0:
+        # Data check train
+        x0, y0 = next(iter(train_loader))
+        print("\nData check:")
+        print("Input shape:", x0.shape)
+        print("Labels shape:", y0.shape)
+        print("Label range:", y0.min().item(), "to", y0.max().item())
 
-    # Data check val
-    x0, y0 = next(iter(val_loader))
-    print("\nData check:")
-    print("Input shape:", x0.shape)
-    print("Labels shape:", y0.shape)
-    print("Label range:", y0.min().item(), "to", y0.max().item())
+        # Data check val
+        x0, y0 = next(iter(val_loader))
+        print("\nData check:")
+        print("Input shape:", x0.shape)
+        print("Labels shape:", y0.shape)
+        print("Label range:", y0.min().item(), "to", y0.max().item())
 
-    # Model check
-    out = model(x0.to(device))
-    print("\nModel check:")
-    print("Output shape:", out.shape)
+        # Model check
+        out = model(x0.to(device))
+        print("\nModel check:")
+        print("Output shape:", out.shape)
 
     if cfg.earlystopping.use:
         early_stopping = EarlyStopping(
@@ -193,37 +262,61 @@ def main(cfg):
         )
 
     for epoch in range(1, cfg.trainer.epochs + 1):
+        if sampler is not None:
+            sampler.set_epoch(epoch)
+
         train_loss = train_model(
-            model, criterion, train_loader, optimizer, device, epoch
-        )
-        val_loss, val_acc, val_precision, val_recall = val_model(
-            model, criterion, val_loader, device, epoch
+            model,
+            criterion,
+            train_loader,
+            optimizer,
+            device,
+            epoch,
+            cfg.device,
+            local_rank,
+            scaler,
         )
 
-        print("Current LR:", optimizer.param_groups[0]["lr"])
-        if cfg.scheduler.use:
-            scheduler.step()
+        if local_rank == 0:
+            val_loss, val_acc, val_precision, val_recall = val_model(
+                model, criterion, val_loader, device, epoch
+            )
 
-        print(
-            f"Epoch {epoch}. "
-            f"Train Loss = {train_loss:.4f}. "
-            f"Val Loss = {val_loss:.4f}. "
-            f"Val Accuracy = {val_acc:.3f}. "
-            f"Val Precision = {val_precision:.3f}."
-            f"Val Recall = {val_recall:.3f}."
-        )
+            print("Current LR:", optimizer.param_groups[0]["lr"])
+            print(
+                f"Epoch {epoch}. "
+                f"Train Loss = {train_loss:.4f}. "
+                f"Val Loss = {val_loss:.4f}. "
+                f"Val Accuracy = {val_acc:.3f}. "
+                f"Val Precision = {val_precision:.3f}."
+                f"Val Recall = {val_recall:.3f}."
+            )
+
+            if cfg.scheduler.use:
+                scheduler.step()
+
+            if cfg.earlystopping.use:
+                early_stopping.check_early_stop(val_loss)
 
         if cfg.earlystopping.use:
-            early_stopping.check_early_stop(val_loss)
+            if early_stopping.stop_training:
+                print(f"Early stopping at epoch {epoch}")
+                stop = torch.tensor(early_stopping.stop_training, device=device)
+                dist.broadcast(stop, src=0)
 
-        if early_stopping.stop_training:
-            print(f"Early stopping at epoch {epoch}")
-            torch.save(
-                model.state_dict(), f"resnet_18_classifier_final_epoch{epoch}.pt"
-            )
-            break
+                if stop.item():
+                    break
 
-    torch.save(model.state_dict(), f"resnet_18_classifier_final_epoch{epoch}.pt")
+                torch.save(
+                    model.state_dict(), f"resnet_18_classifier_final_epoch{epoch}.pt"
+                )
+                break
+
+    if local_rank == 0:
+        torch.save(model.state_dict(), f"resnet_18_classifier_final_epoch{epoch}.pt")
+
+    if use_ddp:
+        dist.destroy_process_group()
 
 
 if __name__ == "__main__":
