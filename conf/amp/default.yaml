@@ -1,0 +1,3 @@
+use: true
+cfg:
+  _target_: torch.cuda.amp.GradScaler
