@@ -6,6 +6,10 @@ wandb
 data/__pycache__
 model/__pycache__
 
-# Inference build artifacts (keep source/config/docs in repo)
 inference/build/
 inference/images/
+
+.python-version
+__pycache__
+.pytest_cache
+.coverage
