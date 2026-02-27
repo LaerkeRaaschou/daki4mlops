@@ -291,6 +291,30 @@ def main(cfg):
                 f"Val Precision = {val_precision:.3f}."
                 f"Val Recall = {val_recall:.3f}."
             )
+            if epoch == 1:
+                best = val_acc
+
+                stop = torch.tensor(early_stopping.stop_training, device=device)
+                dist.broadcast(stop, src=0)
+
+                if stop.item():
+                    break
+
+                torch.save(
+                    model.state_dict(),
+                    f"trained_models/resnet_18_classifier_best_acc_epoch{epoch}.pt",
+                )
+            elif best < val_acc:
+                stop = torch.tensor(early_stopping.stop_training, device=device)
+                dist.broadcast(stop, src=0)
+
+                if stop.item():
+                    break
+
+                torch.save(
+                    model.state_dict(),
+                    f"trained_models/resnet_18_classifier_best_acc_epoch{epoch}.pt",
+                )
 
             if cfg.scheduler.use:
                 scheduler.step()
@@ -308,12 +332,15 @@ def main(cfg):
                     break
 
                 torch.save(
-                    model.state_dict(), f"resnet_18_classifier_final_epoch{epoch}.pt"
+                    model.state_dict(),
+                    f"trained_models/resnet_18_classifier_epoch{epoch}.pt",
                 )
                 break
 
     if local_rank == 0:
-        torch.save(model.state_dict(), f"resnet_18_classifier_final_epoch{epoch}.pt")
+        torch.save(
+            model.state_dict(), f"trained_models/resnet_18_classifier_epoch{epoch}.pt"
+        )
 
     if use_ddp:
         dist.destroy_process_group()
