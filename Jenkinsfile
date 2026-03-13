@@ -11,27 +11,6 @@ pipeline {
             steps {checkout scm}
         }
 
-        stage('Setup Python') {
-            steps {
-                sh '''
-                    set -eux
-                    python3 --version
-                    pip3 --version
-                    python3 -m pip install --upgrade pip
-                    if [ -f requirements.txt ]; then python3 -m pip install -r requirements.txt; fi
-                    if [ -f requirements-dev.txt ]; then python3 -m pip install -r requirements-dev.txt; fi
-                '''
-            }
-        }
-        
-        stage('Unit Test') {
-            steps {
-                sh '''
-                    set -eux
-                    pytest unit_tests/ -v
-                '''
-            }
-        }
         
         stage('Docker Check') {
             steps {
@@ -48,6 +27,17 @@ pipeline {
                 '''
             }
         }
+
+        stage('Unit Test in Docker') {
+            steps {
+                sh '''
+                    set -eux
+                    TAG=$(git rev-parse --short HEAD)
+                    docker run --rm "${IMAGE_NAME}:${TAG}" python3 -m pytest unit_tests/ -v
+                '''
+            }
+        }
+
 
         stage('Push Docker container to DockerHub') {
             steps {
