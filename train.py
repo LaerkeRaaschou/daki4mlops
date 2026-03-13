@@ -293,27 +293,16 @@ def main(cfg):
             )
             if epoch == 1:
                 best = val_acc
+                is_best = True
+            else:
+                is_best = best < val_acc
+                if is_best:
+                    best = val_acc
 
-                stop = torch.tensor(early_stopping.stop_training, device=device)
-                dist.broadcast(stop, src=0)
-
-                if stop.item():
-                    break
-
+            if is_best:
                 torch.save(
-                    model.state_dict(),
-                    f"trained_models/resnet_18_classifier_best_acc_epoch{epoch}.pt",
-                )
-            elif best < val_acc:
-                stop = torch.tensor(early_stopping.stop_training, device=device)
-                dist.broadcast(stop, src=0)
-
-                if stop.item():
-                    break
-
-                torch.save(
-                    model.state_dict(),
-                    f"trained_models/resnet_18_classifier_best_acc_epoch{epoch}.pt",
+                    model.module.state_dict(),
+                    f"finished_model/resnet_18_classifier_best_acc_epoch{epoch}.pt",
                 )
 
             if cfg.scheduler.use:
@@ -333,13 +322,13 @@ def main(cfg):
 
                 torch.save(
                     model.state_dict(),
-                    f"trained_models/resnet_18_classifier_epoch{epoch}.pt",
+                    f"finished_model/resnet_18_classifier_epoch{epoch}.pt",
                 )
                 break
 
     if local_rank == 0:
         torch.save(
-            model.state_dict(), f"trained_models/resnet_18_classifier_epoch{epoch}.pt"
+            model.state_dict(), f"finished_model/resnet_18_classifier_epoch{epoch}.pt"
         )
 
     if use_ddp:
