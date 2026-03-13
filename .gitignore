@@ -1,4 +1,5 @@
 data/tiny-imagenet-200
+model/trained_models
 .DS_Store
 .venv
 .vscode
@@ -13,4 +14,3 @@ inference/images/
 __pycache__
 .pytest_cache
 .coverage
-/trained_models

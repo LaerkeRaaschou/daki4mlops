@@ -11,10 +11,12 @@ import os
 import torch.distributed as dist
 
 
+# Getting variables nesesary for multi gpu runs
 def is_distributed():
     return "RANK" in os.environ and "WORLD_SIZE" in os.environ
 
 
+# Implementation of early stopping based on no improvement over (delta) within the last (patience) epochs
 class EarlyStopping:
     def __init__(self, patience, delta, verbose=False):
         self.patience = patience
@@ -40,6 +42,7 @@ class EarlyStopping:
             return self.stop_training
 
 
+# Train script
 def train_model(
     model,
     criterion,
@@ -77,8 +80,6 @@ def train_model(
 
             loss.backward()
             optimizer.step()
-
-        total_loss += loss.item()
 
         if i % 200 == 0 and local_rank == 0:
             print(
@@ -156,13 +157,13 @@ def main(cfg):
     # Set up for multiple gpus
     use_ddp = is_distributed()
     if use_ddp:
-        dist.init_process_group("nccl")
+        rank = int(os.environ["RANK"])
+        world_size = int(os.environ["WORLD_SIZE"])
         local_rank = int(os.environ["LOCAL_RANK"])
 
         torch.cuda.set_device(local_rank)
+        dist.init_process_group("nccl", device_id=local_rank)
         device = torch.device("cuda", local_rank)
-        rank = int(os.environ["RANK"])
-        world_size = int(os.environ["WORLD_SIZE"])
     else:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         local_rank = 0
@@ -178,11 +179,13 @@ def main(cfg):
     model = ResNet18(num_classes=200).to(device)
     if cfg.compile:
         model = torch.compile(model, backend="eager")
+
+    ddp_model = model
     if use_ddp:
-        model = DDP(model, device_ids=[local_rank])
+        ddp_model = DDP(model, device_ids=[local_rank], output_device=local_rank)
 
     # Define optimizer
-    optimizer = instantiate(cfg.optimizer, params=model.parameters())
+    optimizer = instantiate(cfg.optimizer, params=ddp_model.parameters())
 
     scheduler = None
     if cfg.scheduler.use:
@@ -202,17 +205,7 @@ def main(cfg):
         ]
     )
 
-    transform_train = transforms.Compose(
-        [
-            transforms.RandomResizedCrop(64, scale=(0.7, 1.0)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ColorJitter(0.2, 0.2, 0.2, 0.1),  # optional
-            transforms.ToTensor(),
-            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-        ]
-    )
-
-    # Train data and val data
+    # Train data and val data = the same
     train_dataset = get_dataset(
         train_dir=f"{data_path}/train",
         transform=transform_train,
@@ -223,6 +216,7 @@ def main(cfg):
         train_dir=f"{data_path}/train", transform=transform_train, mapping_path=None
     )
 
+    # part into real val and train dataset = non overlapping
     train_loader, val_loader, sampler = get_loaders(
         train_set=train_dataset,
         val_set=val_dataset,
@@ -233,26 +227,6 @@ def main(cfg):
         rank=rank,
     )
     print(f"Rank {rank} num_batches = {len(train_loader)}")
-
-    if local_rank == 0:
-        # Data check train
-        x0, y0 = next(iter(train_loader))
-        print("\nData check:")
-        print("Input shape:", x0.shape)
-        print("Labels shape:", y0.shape)
-        print("Label range:", y0.min().item(), "to", y0.max().item())
-
-        # Data check val
-        x0, y0 = next(iter(val_loader))
-        print("\nData check:")
-        print("Input shape:", x0.shape)
-        print("Labels shape:", y0.shape)
-        print("Label range:", y0.min().item(), "to", y0.max().item())
-
-        # Model check
-        out = model(x0.to(device))
-        print("\nModel check:")
-        print("Output shape:", out.shape)
 
     if cfg.earlystopping.use:
         early_stopping = EarlyStopping(
@@ -266,7 +240,7 @@ def main(cfg):
             sampler.set_epoch(epoch)
 
         train_loss = train_model(
-            model,
+            ddp_model,
             criterion,
             train_loader,
             optimizer,
@@ -276,6 +250,9 @@ def main(cfg):
             local_rank,
             scaler,
         )
+
+        if use_ddp:
+            dist.barrier()
 
         if local_rank == 0:
             val_loss, val_acc, val_precision, val_recall = val_model(
@@ -301,25 +278,29 @@ def main(cfg):
 
             if is_best:
                 torch.save(
-                    model.module.state_dict(),
+                    model.state_dict(),
                     f"finished_model/resnet_18_classifier_best_acc_epoch{epoch}.pt",
                 )
 
-            if cfg.scheduler.use:
-                scheduler.step()
-
+            stop = False
             if cfg.earlystopping.use:
                 early_stopping.check_early_stop(val_loss)
+                stop = early_stopping.stop_training
+        else:
+            stop = False
 
-        if cfg.earlystopping.use:
-            if early_stopping.stop_training:
+        if cfg.scheduler.use:
+            scheduler.step()
+
+        if use_ddp:
+            stop_tensor = torch.tensor(int(stop), device=device)
+            dist.broadcast(stop_tensor, src=0)
+            dist.barrier()  # all ranks wait until validation/broadcast is done
+            stop = bool(stop_tensor.item())
+
+        if stop:
+            if local_rank == 0:
                 print(f"Early stopping at epoch {epoch}")
-                stop = torch.tensor(early_stopping.stop_training, device=device)
-                dist.broadcast(stop, src=0)
-
-                if stop.item():
-                    break
-
                 torch.save(
                     model.state_dict(),
                     f"finished_model/resnet_18_classifier_epoch{epoch}.pt",
@@ -337,3 +318,17 @@ def main(cfg):
 
 if __name__ == "__main__":
     main()
+
+
+"""
+transform_train2 = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(64, scale=(0.7, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ColorJitter(0.2, 0.2, 0.2, 0.1),  # optional
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ]
+    )
+
+"""
