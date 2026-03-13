@@ -10,6 +10,19 @@ pipeline {
         stage('Checkout') {
             steps {checkout scm}
         }
+
+        stage('Setup Python') {
+            steps {
+                sh '''
+                    set -eux
+                    python3 --version
+                    pip3 --version
+                    python3 -m pip install --upgrade pip
+                    if [ -f requirements.txt ]; then python3 -m pip install -r requirements.txt; fi
+                    if [ -f requirements-dev.txt ]; then python3 -m pip install -r requirements-dev.txt; fi
+                '''
+            }
+        }
         
         stage('Unit Test') {
             steps {
