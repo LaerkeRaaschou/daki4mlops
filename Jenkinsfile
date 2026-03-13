@@ -3,11 +3,23 @@ pipeline {
     environment {
         DOCKERFILE = 'DockerFile'
         IMAGE_NAME  = 'daki4mlops'
-        IMAGE_TAG   = "${env.BUILD_NUMBER}"
     }
 
     stages {
-        stage('Docker check') {
+        stage('Checkout') {
+            steps {checkout scm}
+        }
+        
+        stage('Unit Test') {
+            steps {
+                sh '''
+                    set -eux
+                    pytest unit_tests/ -v
+                '''
+            }
+        }
+        
+        stage('Docker Check') {
             steps {
                 sh 'docker version'
             }
@@ -15,38 +27,31 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh """
+                sh '''
                     set -eux
-                    docker build -f ${DOCKERFILE} -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                """
-            }
-        }
-        
-         stage('Unit Test (placeholder)') {
-            steps {
-                echo 'No unit test yet - skip.'
-            }
-        }
-        
-        stage('Test') {
-            steps {
-                echo 'Testing..'
+                    TAG=$(git rev-parse --short HEAD)
+                    docker build -f "${DOCKERFILE}" -t "${IMAGE_NAME}:${TAG}" .
+                '''
             }
         }
         
         stage('Test in container') {
             steps {
-                sh """
+                sh '''
                     set -eux
-                    docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} python3 --version
-                """
+                    TAG=$(git rev-parse --short HEAD)
+                    docker run --rm "${IMAGE_NAME}:${TAG}" python3 --version
+                '''
             }
         }
         
         stage('Deploy') {
             when { branch 'main' }
             steps {
-                echo 'Deploying....'
+                sh '''
+                set -eux
+                TAG=$(git rev-parse --short HEAD)
+                '''
             }
         }
     }
