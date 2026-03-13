@@ -38,24 +38,23 @@ pipeline {
 
         stage('Push Docker container to DockerHub') {
             steps {
-                 withCredentials([usernamePassword(
-                credentialsId: 'dockerhub-credentials',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )]) {
-                sh '''
-                    set -eux
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        set -eux
+                        TAG=$(git rev-parse --short HEAD)
 
-                    TAG=$(git rev-parse --short HEAD)
-
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-
-                    docker tag ${IMAGE_NAME}:${TAG} ${DOCKERHUB_REPO}:${TAG}
-
-                    docker push ${DOCKERHUB_REPO}:${TAG}
-                '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker tag ${IMAGE_NAME}:${TAG} ${DOCKERHUB_REPO}:${TAG}
+                        docker push ${DOCKERHUB_REPO}:${TAG}
+                    '''
+                }
             }
         }
+
         
         stage('Test in container') {
             steps {
