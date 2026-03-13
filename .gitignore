@@ -13,3 +13,4 @@ inference/images/
 __pycache__
 .pytest_cache
 .coverage
+/trained_models
