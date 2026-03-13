@@ -3,6 +3,7 @@ pipeline {
     environment {
         DOCKERFILE = 'DockerFile'
         IMAGE_NAME  = 'daki4mlops'
+        DOCKERHUB_REPO = 'ainger24/daki4mlops'
     }
 
     stages {
@@ -31,6 +32,27 @@ pipeline {
                     set -eux
                     TAG=$(git rev-parse --short HEAD)
                     docker build -f "${DOCKERFILE}" -t "${IMAGE_NAME}:${TAG}" .
+                '''
+            }
+        }
+
+        stage('Push Docker container to DockerHub') {
+            steps {
+                 withCredentials([usernamePassword(
+                credentialsId: 'dockerhub-credentials',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )]) {
+                sh '''
+                    set -eux
+
+                    TAG=$(git rev-parse --short HEAD)
+
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+                    docker tag ${IMAGE_NAME}:${TAG} ${DOCKERHUB_REPO}:${TAG}
+
+                    docker push ${DOCKERHUB_REPO}:${TAG}
                 '''
             }
         }
