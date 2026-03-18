@@ -72,7 +72,8 @@ pipeline {
                     set -eux
                     TAG=$(git rev-parse --short HEAD)
 
-                    docker run --rm "${IMAGE_NAME}:${TAG}" python train.py --help
+                    docker run --rm "${IMAGE_NAME}:${TAG}" \
+                        python train.py trainer.epochs="${EPOCHS}" compile=false
                 '''
             }
         }
