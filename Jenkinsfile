@@ -53,6 +53,7 @@ pipeline {
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                         docker tag ${IMAGE_NAME}:${TAG} ${DOCKERHUB_REPO}:${TAG}
                         docker push ${DOCKERHUB_REPO}:${TAG}
+                        docker logout
                     '''
                 }
             }
