@@ -18,6 +18,17 @@ pipeline {
             }
         }
 
+        stage('Reset Docker Auth') {
+            steps {
+                sh '''
+                    set +e
+                    docker logout || true
+                    rm -f ~/.docker/config.json || true
+                    set -e
+                '''
+            }
+        }   
+
         stage('Build Docker Image') {
             steps {
                 sh '''
