@@ -68,16 +68,17 @@ pipeline {
                 expression { params.RUN_TRAINING }
             }
             steps {
-                sh '''
-                    set -eux
-                    TAG=$(git rev-parse --short HEAD)
+                withCredentials([string(credentialsId: 'wandb-api-key', variable: 'WANDB_API_KEY')]) {
+                    sh '''
+                        set -eux
+                        TAG=$(git rev-parse --short HEAD)
 
-                    docker run --rm "${IMAGE_NAME}:${TAG}" \
-                        python train.py trainer.epochs="${EPOCHS}" compile=false
-                '''
+                        docker run --rm "${IMAGE_NAME}:${TAG}" \
+                            python train.py trainer.epochs="${EPOCHS}" compile=false
+                    '''
+                }
             }
         }
-
 
         stage('Archive Model Artifacts') {
             when {
