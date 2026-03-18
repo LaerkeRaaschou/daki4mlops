@@ -73,7 +73,9 @@ pipeline {
                         set -eux
                         TAG=$(git rev-parse --short HEAD)
 
-                        docker run --rm "${IMAGE_NAME}:${TAG}" \
+                        docker run --rm \
+                            -e WANDB_API_KEY="$WANDB_API_KEY" \
+                            "${IMAGE_NAME}:${TAG}" \
                             python train.py trainer.epochs="${EPOCHS}" compile=false
                     '''
                 }
