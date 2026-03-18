@@ -1,10 +1,19 @@
 pipeline {
     agent any
+
+
+    parameters {
+        booleanParam(name: 'RUN_TRAINING', defaultValue: false, description: 'Run model training.')
+        string(name: 'EPOCHS', defaultValue: '10', description: 'Number of epochs.')
+    }
+
+
     environment {
         DOCKERFILE = 'DockerFile'
         IMAGE_NAME  = 'daki4mlops'
         DOCKERHUB_REPO = 'ainger24/daki4mlops'
     }
+
 
     stages {
         stage('Checkout') {
@@ -18,6 +27,7 @@ pipeline {
             }
         }
 
+
         stage('Reset Docker Auth') {
             steps {
                 sh '''
@@ -29,6 +39,7 @@ pipeline {
             }
         }   
 
+
         stage('Build Docker Image') {
             steps {
                 sh '''
@@ -39,13 +50,40 @@ pipeline {
             }
         }
 
+
         stage('Unit Test in Docker') {
             steps {
                 sh '''
                     set -eux
                     TAG=$(git rev-parse --short HEAD)
-                    docker run --rm "${IMAGE_NAME}:${TAG}" python3 -m pytest unit_tests/ -v
+                    docker run --rm "${IMAGE_NAME}:${TAG}" \
+                        python3 -m pytest earlystopping_test.py trainmodel_test.py valmodel_test.py -v
                 '''
+            }
+        }
+
+
+        stage('Train Model') {
+            when {
+                expression { params.RUN_TRAINING }
+            }
+            steps {
+                sh '''
+                    set -eux
+                    TAG=$(git rev-parse --short HEAD)
+                    
+                    docker run --rm "${IMAGE_NAME}:${TAG}" python train.py --help
+                '''
+            }
+        }
+
+
+        stage('Archive Model Artifacts') {
+            when {
+                expression { params.RUN_TRAINING }
+            }
+            steps {
+                echo 'Model artifact archiving will be added next.'
             }
         }
 
@@ -62,8 +100,8 @@ pipeline {
                         TAG=$(git rev-parse --short HEAD)
 
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker tag ${IMAGE_NAME}:${TAG} ${DOCKERHUB_REPO}:${TAG}
-                        docker push ${DOCKERHUB_REPO}:${TAG}
+                        docker tag "${IMAGE_NAME}:${TAG}" "${DOCKERHUB_REPO}:${TAG}"
+                        docker push "${DOCKERHUB_REPO}:${TAG}"
                         docker logout
                     '''
                 }
@@ -81,6 +119,7 @@ pipeline {
             }
         }
         
+
         stage('Deploy') {
             when { branch 'main' }
             steps {
