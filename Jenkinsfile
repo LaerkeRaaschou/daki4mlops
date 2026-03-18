@@ -57,7 +57,7 @@ pipeline {
                     set -eux
                     TAG=$(git rev-parse --short HEAD)
                     docker run --rm "${IMAGE_NAME}:${TAG}" \
-                        python3 -m pytest earlystopping_test.py trainmodel_test.py valmodel_test.py -v
+                        python3 -m pytest unit_tests -v
                 '''
             }
         }
@@ -71,7 +71,7 @@ pipeline {
                 sh '''
                     set -eux
                     TAG=$(git rev-parse --short HEAD)
-                    
+
                     docker run --rm "${IMAGE_NAME}:${TAG}" python train.py --help
                 '''
             }
