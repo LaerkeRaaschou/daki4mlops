@@ -20,18 +20,19 @@ pipeline {
             steps {checkout scm}
         }
 
-        stage('Verify Dataset in Workspace') {
+        stage('Pull Dataset') {
+            when {
+        expression { params.RUN_TRAINING }
+            }
             steps {
                 sh '''
                     set -eux
-                    pwd
-                    ls -la
-                    ls -la data || true
-                    ls -la data/tiny-imagenet-200 || true
-                    ls -la data/tiny-imagenet-200/train || true
+                    dvc pull data/tiny-imagenet-200.dvc
+                    ls -la data/tiny-imagenet-200
+                    ls -la data/tiny-imagenet-200/train
                 '''
             }
-        }
+        }   
         
         stage('Docker Check') {
             steps {
@@ -87,6 +88,7 @@ pipeline {
 
                         docker run --rm \
                             -e WANDB_API_KEY="$WANDB_API_KEY" \
+                            -v "$WORKSPACE/data:/app/data" \
                             "${IMAGE_NAME}:${TAG}" \
                             python train.py trainer.epochs="${EPOCHS}" compile=false
                     '''
