@@ -20,6 +20,18 @@ pipeline {
             steps {checkout scm}
         }
 
+        stage('Verify Dataset in Workspace') {
+            steps {
+                sh '''
+                    set -eux
+                    pwd
+                    ls -la
+                    ls -la data || true
+                    ls -la data/tiny-imagenet-200 || true
+                    ls -la data/tiny-imagenet-200/train || true
+                '''
+            }
+        }
         
         stage('Docker Check') {
             steps {
