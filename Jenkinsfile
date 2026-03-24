@@ -22,18 +22,20 @@ pipeline {
 
         stage('Pull Dataset') {
             when {
-        expression { params.RUN_TRAINING }
+                expression { params.RUN_TRAINING }
             }
             steps {
                 sh '''
                     set -eux
-                    python3 -m pip install --user dvc
-                    python3 -m dvc pull data/tiny-imagenet-200.dvc
-                    ls -la data/tiny-imagenet-200
-                    ls -la data/tiny-imagenet-200/train
+                    docker run --rm \
+                    v "$PWD:/repo" \
+                    -w /repo \
+                    iterativeai/dvc \
+                    dvc pull data/tiny-imagenet-200.dvc
+                    test -d data/tiny-imagenet-200/train
                 '''
             }
-        }   
+        }
         
         stage('Docker Check') {
             steps {
