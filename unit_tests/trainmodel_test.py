@@ -3,7 +3,10 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 import train
+<<<<<<< HEAD
+=======
 
+>>>>>>> b5947eea03685bc60cc50d391cdde4b29a0e322d
 
 def _setup_case():
     torch.manual_seed(0)
