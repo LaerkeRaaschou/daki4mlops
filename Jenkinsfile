@@ -31,8 +31,7 @@ pipeline {
                     -v "$WORKSPACE:/repo" \
                     -w /repo \
                     iterativeai/dvc \
-                    dvc pull data/tiny-imagenet-200.dvc
-                    test -d data/tiny-imagenet-200/train
+                    dvc pull && \
                 '''
             }
         }
