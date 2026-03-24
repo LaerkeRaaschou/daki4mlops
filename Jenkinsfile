@@ -37,6 +37,7 @@ pipeline {
                                 -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
                                 -v "$WORKSPACE:/repo" \
                                 -w /repo \
+                                dvcorg/cml:latest \
                                 dvc pull data/tiny-imagenet-200.dvc
                         '''
                 }
