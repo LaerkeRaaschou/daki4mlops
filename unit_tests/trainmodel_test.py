@@ -3,7 +3,6 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 import train
-#ha ha
 
 def _setup_case():
     torch.manual_seed(0)
