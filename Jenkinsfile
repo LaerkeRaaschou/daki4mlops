@@ -28,7 +28,7 @@ pipeline {
                 sh '''
                     set -eux
                     docker run --rm \
-                    v "$PWD:/repo" \
+                    -v "$WORKSPACE:/repo" \
                     -w /repo \
                     iterativeai/dvc \
                     dvc pull data/tiny-imagenet-200.dvc
