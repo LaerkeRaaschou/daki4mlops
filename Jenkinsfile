@@ -20,22 +20,29 @@ pipeline {
             steps {checkout scm}
         }
 
+
         stage('Pull Dataset') {
             when {
                 expression { params.RUN_TRAINING }
             }
             steps {
-                sh '''
-                    set -eux
-                    docker run --rm \
-                    -v "$WORKSPACE:/repo" \
-                    -w /repo \
-                    iterativeai/dvc \
-                    dvc pull && \
-                '''
+                withCredentials([
+                    string(credentialsId: 'minio-user', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'minio-password', variable: 'AWS_SECRET_ACCESS_KEY')
+                    ]) {
+                        sh '''
+                            set -eux
+                            docker run --rm \
+                                -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+                                -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+                                -v "$WORKSPACE:/repo" \
+                                -w /repo \
+                                dvc pull data/tiny-imagenet-200.dvc
+                        '''
+                }
             }
         }
-        
+
         stage('Docker Check') {
             steps {
                 sh 'docker version'
