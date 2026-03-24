@@ -60,8 +60,8 @@ def run_inference(model_path, data, q):
 
 
 def main():
-    full_model = "model/trained_models/resnet_18_classifier_best_acc_epoch15.pt"
-    quantized_model = "model/quantized_models/quantized.pt"
+    full_model = "model/trained_models/resnet_18_classifier_best_acc_epocha44.pt"
+    quantized_model = "model/quantized_models/quantized44.pt"
     device = "cpu"
     data = torch.randn(1, 3, 64, 64, dtype=torch.float).to(device)
     if os.path.exists(quantized_model):

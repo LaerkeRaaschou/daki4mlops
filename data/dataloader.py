@@ -2,7 +2,7 @@ import os
 import json
 from glob import glob
 from pathlib import Path
-from torchvision.io import decode_image
+from torchvision.io import read_image, ImageReadMode
 from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import datasets
 import torch
@@ -40,7 +40,7 @@ class TinyImagenetTestset(Dataset):
     def __getitem__(self, index):
         # Decode path to image
         image_path = self.image_paths[index]
-        img = decode_image(image_path)
+        img = read_image(image_path, mode=ImageReadMode.RGB)
         # Map filename to train id
         filename = Path(image_path).name
         train_id = self.filename_to_train_id[filename]

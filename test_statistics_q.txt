@@ -1,0 +1,1205 @@
+Detailed Per-Class Statistics
+Overall Accuracy: 40.78%
+Overall Average Confidence: 0.3592
+Total Samples: 10000
+
+Class 0:
+  Accuracy: 72.00%
+  Correct: 36 / 50
+  Average Confidence: 0.3978
+  Lowest Confidence: 0.0462
+  Highest Confidence: 0.6964
+Class 1:
+  Accuracy: 62.00%
+  Correct: 31 / 50
+  Average Confidence: 0.4834
+  Lowest Confidence: 0.0918
+  Highest Confidence: 0.7132
+Class 2:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.3030
+  Lowest Confidence: 0.0770
+  Highest Confidence: 0.5238
+Class 3:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3153
+  Lowest Confidence: 0.0935
+  Highest Confidence: 0.6081
+Class 4:
+  Accuracy: 56.00%
+  Correct: 28 / 50
+  Average Confidence: 0.3596
+  Lowest Confidence: 0.0914
+  Highest Confidence: 0.6361
+Class 5:
+  Accuracy: 22.00%
+  Correct: 11 / 50
+  Average Confidence: 0.3026
+  Lowest Confidence: 0.0554
+  Highest Confidence: 0.5867
+Class 6:
+  Accuracy: 52.00%
+  Correct: 26 / 50
+  Average Confidence: 0.3577
+  Lowest Confidence: 0.0577
+  Highest Confidence: 0.6616
+Class 7:
+  Accuracy: 26.00%
+  Correct: 13 / 50
+  Average Confidence: 0.3266
+  Lowest Confidence: 0.0726
+  Highest Confidence: 0.5916
+Class 8:
+  Accuracy: 66.00%
+  Correct: 33 / 50
+  Average Confidence: 0.4570
+  Lowest Confidence: 0.1320
+  Highest Confidence: 0.7170
+Class 9:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3459
+  Lowest Confidence: 0.1015
+  Highest Confidence: 0.6440
+Class 10:
+  Accuracy: 44.00%
+  Correct: 22 / 50
+  Average Confidence: 0.3628
+  Lowest Confidence: 0.0549
+  Highest Confidence: 0.6500
+Class 11:
+  Accuracy: 50.00%
+  Correct: 25 / 50
+  Average Confidence: 0.3611
+  Lowest Confidence: 0.0551
+  Highest Confidence: 0.6620
+Class 12:
+  Accuracy: 60.00%
+  Correct: 30 / 50
+  Average Confidence: 0.3597
+  Lowest Confidence: 0.0678
+  Highest Confidence: 0.6009
+Class 13:
+  Accuracy: 74.00%
+  Correct: 37 / 50
+  Average Confidence: 0.4386
+  Lowest Confidence: 0.0980
+  Highest Confidence: 0.6768
+Class 14:
+  Accuracy: 64.00%
+  Correct: 32 / 50
+  Average Confidence: 0.4679
+  Lowest Confidence: 0.1118
+  Highest Confidence: 0.7047
+Class 15:
+  Accuracy: 36.00%
+  Correct: 18 / 50
+  Average Confidence: 0.2922
+  Lowest Confidence: 0.0511
+  Highest Confidence: 0.5612
+Class 16:
+  Accuracy: 18.00%
+  Correct: 9 / 50
+  Average Confidence: 0.2776
+  Lowest Confidence: 0.0586
+  Highest Confidence: 0.6476
+Class 17:
+  Accuracy: 48.00%
+  Correct: 24 / 50
+  Average Confidence: 0.3721
+  Lowest Confidence: 0.0559
+  Highest Confidence: 0.6546
+Class 18:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.2911
+  Lowest Confidence: 0.0773
+  Highest Confidence: 0.5836
+Class 19:
+  Accuracy: 48.00%
+  Correct: 24 / 50
+  Average Confidence: 0.4005
+  Lowest Confidence: 0.0986
+  Highest Confidence: 0.6892
+Class 20:
+  Accuracy: 44.00%
+  Correct: 22 / 50
+  Average Confidence: 0.3712
+  Lowest Confidence: 0.0619
+  Highest Confidence: 0.6527
+Class 21:
+  Accuracy: 58.00%
+  Correct: 29 / 50
+  Average Confidence: 0.4254
+  Lowest Confidence: 0.0579
+  Highest Confidence: 0.6883
+Class 22:
+  Accuracy: 70.00%
+  Correct: 35 / 50
+  Average Confidence: 0.4479
+  Lowest Confidence: 0.1055
+  Highest Confidence: 0.6688
+Class 23:
+  Accuracy: 64.00%
+  Correct: 32 / 50
+  Average Confidence: 0.4697
+  Lowest Confidence: 0.0710
+  Highest Confidence: 0.7242
+Class 24:
+  Accuracy: 16.00%
+  Correct: 8 / 50
+  Average Confidence: 0.2660
+  Lowest Confidence: 0.0802
+  Highest Confidence: 0.6138
+Class 25:
+  Accuracy: 54.00%
+  Correct: 27 / 50
+  Average Confidence: 0.3681
+  Lowest Confidence: 0.0711
+  Highest Confidence: 0.6277
+Class 26:
+  Accuracy: 54.00%
+  Correct: 27 / 50
+  Average Confidence: 0.3495
+  Lowest Confidence: 0.0880
+  Highest Confidence: 0.6126
+Class 27:
+  Accuracy: 12.00%
+  Correct: 6 / 50
+  Average Confidence: 0.2635
+  Lowest Confidence: 0.0664
+  Highest Confidence: 0.6429
+Class 28:
+  Accuracy: 30.00%
+  Correct: 15 / 50
+  Average Confidence: 0.3422
+  Lowest Confidence: 0.0701
+  Highest Confidence: 0.6316
+Class 29:
+  Accuracy: 22.00%
+  Correct: 11 / 50
+  Average Confidence: 0.3168
+  Lowest Confidence: 0.0738
+  Highest Confidence: 0.5762
+Class 30:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3349
+  Lowest Confidence: 0.0728
+  Highest Confidence: 0.5998
+Class 31:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.3367
+  Lowest Confidence: 0.0965
+  Highest Confidence: 0.6303
+Class 32:
+  Accuracy: 20.00%
+  Correct: 10 / 50
+  Average Confidence: 0.2877
+  Lowest Confidence: 0.0486
+  Highest Confidence: 0.6067
+Class 33:
+  Accuracy: 34.00%
+  Correct: 17 / 50
+  Average Confidence: 0.2922
+  Lowest Confidence: 0.0535
+  Highest Confidence: 0.5791
+Class 34:
+  Accuracy: 46.00%
+  Correct: 23 / 50
+  Average Confidence: 0.3556
+  Lowest Confidence: 0.0632
+  Highest Confidence: 0.6789
+Class 35:
+  Accuracy: 52.00%
+  Correct: 26 / 50
+  Average Confidence: 0.3893
+  Lowest Confidence: 0.0963
+  Highest Confidence: 0.6751
+Class 36:
+  Accuracy: 52.00%
+  Correct: 26 / 50
+  Average Confidence: 0.4272
+  Lowest Confidence: 0.0958
+  Highest Confidence: 0.6931
+Class 37:
+  Accuracy: 54.00%
+  Correct: 27 / 50
+  Average Confidence: 0.4066
+  Lowest Confidence: 0.0770
+  Highest Confidence: 0.6860
+Class 38:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3377
+  Lowest Confidence: 0.0739
+  Highest Confidence: 0.6136
+Class 39:
+  Accuracy: 48.00%
+  Correct: 24 / 50
+  Average Confidence: 0.3537
+  Lowest Confidence: 0.1114
+  Highest Confidence: 0.6357
+Class 40:
+  Accuracy: 16.00%
+  Correct: 8 / 50
+  Average Confidence: 0.3193
+  Lowest Confidence: 0.0740
+  Highest Confidence: 0.6406
+Class 41:
+  Accuracy: 32.00%
+  Correct: 16 / 50
+  Average Confidence: 0.3797
+  Lowest Confidence: 0.0939
+  Highest Confidence: 0.6423
+Class 42:
+  Accuracy: 30.00%
+  Correct: 15 / 50
+  Average Confidence: 0.3127
+  Lowest Confidence: 0.0835
+  Highest Confidence: 0.6497
+Class 43:
+  Accuracy: 44.00%
+  Correct: 22 / 50
+  Average Confidence: 0.3863
+  Lowest Confidence: 0.0659
+  Highest Confidence: 0.6499
+Class 44:
+  Accuracy: 78.00%
+  Correct: 39 / 50
+  Average Confidence: 0.5335
+  Lowest Confidence: 0.1145
+  Highest Confidence: 0.7189
+Class 45:
+  Accuracy: 66.00%
+  Correct: 33 / 50
+  Average Confidence: 0.4279
+  Lowest Confidence: 0.0883
+  Highest Confidence: 0.7019
+Class 46:
+  Accuracy: 42.00%
+  Correct: 21 / 50
+  Average Confidence: 0.3789
+  Lowest Confidence: 0.1212
+  Highest Confidence: 0.6733
+Class 47:
+  Accuracy: 26.00%
+  Correct: 13 / 50
+  Average Confidence: 0.3361
+  Lowest Confidence: 0.0712
+  Highest Confidence: 0.6458
+Class 48:
+  Accuracy: 14.00%
+  Correct: 7 / 50
+  Average Confidence: 0.3015
+  Lowest Confidence: 0.0697
+  Highest Confidence: 0.6308
+Class 49:
+  Accuracy: 36.00%
+  Correct: 18 / 50
+  Average Confidence: 0.3136
+  Lowest Confidence: 0.0653
+  Highest Confidence: 0.6312
+Class 50:
+  Accuracy: 66.00%
+  Correct: 33 / 50
+  Average Confidence: 0.4659
+  Lowest Confidence: 0.1045
+  Highest Confidence: 0.7045
+Class 51:
+  Accuracy: 40.00%
+  Correct: 20 / 50
+  Average Confidence: 0.3678
+  Lowest Confidence: 0.0916
+  Highest Confidence: 0.6177
+Class 52:
+  Accuracy: 70.00%
+  Correct: 35 / 50
+  Average Confidence: 0.4558
+  Lowest Confidence: 0.1084
+  Highest Confidence: 0.7121
+Class 53:
+  Accuracy: 46.00%
+  Correct: 23 / 50
+  Average Confidence: 0.3707
+  Lowest Confidence: 0.0693
+  Highest Confidence: 0.6363
+Class 54:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.3749
+  Lowest Confidence: 0.1278
+  Highest Confidence: 0.6589
+Class 55:
+  Accuracy: 46.00%
+  Correct: 23 / 50
+  Average Confidence: 0.3779
+  Lowest Confidence: 0.0656
+  Highest Confidence: 0.6434
+Class 56:
+  Accuracy: 34.00%
+  Correct: 17 / 50
+  Average Confidence: 0.3595
+  Lowest Confidence: 0.0618
+  Highest Confidence: 0.6225
+Class 57:
+  Accuracy: 50.00%
+  Correct: 25 / 50
+  Average Confidence: 0.4171
+  Lowest Confidence: 0.0814
+  Highest Confidence: 0.6988
+Class 58:
+  Accuracy: 64.00%
+  Correct: 32 / 50
+  Average Confidence: 0.4382
+  Lowest Confidence: 0.0566
+  Highest Confidence: 0.6846
+Class 59:
+  Accuracy: 30.00%
+  Correct: 15 / 50
+  Average Confidence: 0.3663
+  Lowest Confidence: 0.0685
+  Highest Confidence: 0.6237
+Class 60:
+  Accuracy: 46.00%
+  Correct: 23 / 50
+  Average Confidence: 0.3546
+  Lowest Confidence: 0.0540
+  Highest Confidence: 0.6500
+Class 61:
+  Accuracy: 60.00%
+  Correct: 30 / 50
+  Average Confidence: 0.4805
+  Lowest Confidence: 0.0926
+  Highest Confidence: 0.6806
+Class 62:
+  Accuracy: 32.00%
+  Correct: 16 / 50
+  Average Confidence: 0.3098
+  Lowest Confidence: 0.0451
+  Highest Confidence: 0.6088
+Class 63:
+  Accuracy: 48.00%
+  Correct: 24 / 50
+  Average Confidence: 0.3423
+  Lowest Confidence: 0.0590
+  Highest Confidence: 0.6188
+Class 64:
+  Accuracy: 18.00%
+  Correct: 9 / 50
+  Average Confidence: 0.2715
+  Lowest Confidence: 0.0590
+  Highest Confidence: 0.5482
+Class 65:
+  Accuracy: 24.00%
+  Correct: 12 / 50
+  Average Confidence: 0.3135
+  Lowest Confidence: 0.0818
+  Highest Confidence: 0.5675
+Class 66:
+  Accuracy: 58.00%
+  Correct: 29 / 50
+  Average Confidence: 0.3993
+  Lowest Confidence: 0.0939
+  Highest Confidence: 0.6991
+Class 67:
+  Accuracy: 22.00%
+  Correct: 11 / 50
+  Average Confidence: 0.2877
+  Lowest Confidence: 0.0710
+  Highest Confidence: 0.6069
+Class 68:
+  Accuracy: 50.00%
+  Correct: 25 / 50
+  Average Confidence: 0.4029
+  Lowest Confidence: 0.0573
+  Highest Confidence: 0.6729
+Class 69:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3208
+  Lowest Confidence: 0.0514
+  Highest Confidence: 0.6133
+Class 70:
+  Accuracy: 40.00%
+  Correct: 20 / 50
+  Average Confidence: 0.4136
+  Lowest Confidence: 0.0603
+  Highest Confidence: 0.6570
+Class 71:
+  Accuracy: 64.00%
+  Correct: 32 / 50
+  Average Confidence: 0.4513
+  Lowest Confidence: 0.1053
+  Highest Confidence: 0.7001
+Class 72:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.3464
+  Lowest Confidence: 0.0561
+  Highest Confidence: 0.6904
+Class 73:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3331
+  Lowest Confidence: 0.0695
+  Highest Confidence: 0.6059
+Class 74:
+  Accuracy: 46.00%
+  Correct: 23 / 50
+  Average Confidence: 0.3422
+  Lowest Confidence: 0.0842
+  Highest Confidence: 0.6658
+Class 75:
+  Accuracy: 18.00%
+  Correct: 9 / 50
+  Average Confidence: 0.2753
+  Lowest Confidence: 0.0774
+  Highest Confidence: 0.5728
+Class 76:
+  Accuracy: 36.00%
+  Correct: 18 / 50
+  Average Confidence: 0.3285
+  Lowest Confidence: 0.0629
+  Highest Confidence: 0.6215
+Class 77:
+  Accuracy: 14.00%
+  Correct: 7 / 50
+  Average Confidence: 0.2734
+  Lowest Confidence: 0.0644
+  Highest Confidence: 0.5529
+Class 78:
+  Accuracy: 76.00%
+  Correct: 38 / 50
+  Average Confidence: 0.5058
+  Lowest Confidence: 0.0671
+  Highest Confidence: 0.7123
+Class 79:
+  Accuracy: 26.00%
+  Correct: 13 / 50
+  Average Confidence: 0.3276
+  Lowest Confidence: 0.0782
+  Highest Confidence: 0.6370
+Class 80:
+  Accuracy: 22.00%
+  Correct: 11 / 50
+  Average Confidence: 0.2752
+  Lowest Confidence: 0.0526
+  Highest Confidence: 0.5864
+Class 81:
+  Accuracy: 82.00%
+  Correct: 41 / 50
+  Average Confidence: 0.5177
+  Lowest Confidence: 0.0981
+  Highest Confidence: 0.7036
+Class 82:
+  Accuracy: 26.00%
+  Correct: 13 / 50
+  Average Confidence: 0.3216
+  Lowest Confidence: 0.0784
+  Highest Confidence: 0.6386
+Class 83:
+  Accuracy: 24.00%
+  Correct: 12 / 50
+  Average Confidence: 0.2974
+  Lowest Confidence: 0.0515
+  Highest Confidence: 0.6156
+Class 84:
+  Accuracy: 48.00%
+  Correct: 24 / 50
+  Average Confidence: 0.3244
+  Lowest Confidence: 0.0819
+  Highest Confidence: 0.5926
+Class 85:
+  Accuracy: 36.00%
+  Correct: 18 / 50
+  Average Confidence: 0.3330
+  Lowest Confidence: 0.0765
+  Highest Confidence: 0.6022
+Class 86:
+  Accuracy: 32.00%
+  Correct: 16 / 50
+  Average Confidence: 0.3111
+  Lowest Confidence: 0.0667
+  Highest Confidence: 0.6545
+Class 87:
+  Accuracy: 34.00%
+  Correct: 17 / 50
+  Average Confidence: 0.3073
+  Lowest Confidence: 0.0531
+  Highest Confidence: 0.6601
+Class 88:
+  Accuracy: 16.00%
+  Correct: 8 / 50
+  Average Confidence: 0.2727
+  Lowest Confidence: 0.0813
+  Highest Confidence: 0.5757
+Class 89:
+  Accuracy: 50.00%
+  Correct: 25 / 50
+  Average Confidence: 0.3324
+  Lowest Confidence: 0.0657
+  Highest Confidence: 0.6321
+Class 90:
+  Accuracy: 58.00%
+  Correct: 29 / 50
+  Average Confidence: 0.3929
+  Lowest Confidence: 0.0572
+  Highest Confidence: 0.6392
+Class 91:
+  Accuracy: 42.00%
+  Correct: 21 / 50
+  Average Confidence: 0.3606
+  Lowest Confidence: 0.0615
+  Highest Confidence: 0.6902
+Class 92:
+  Accuracy: 30.00%
+  Correct: 15 / 50
+  Average Confidence: 0.2966
+  Lowest Confidence: 0.0571
+  Highest Confidence: 0.6530
+Class 93:
+  Accuracy: 44.00%
+  Correct: 22 / 50
+  Average Confidence: 0.3597
+  Lowest Confidence: 0.0910
+  Highest Confidence: 0.6883
+Class 94:
+  Accuracy: 46.00%
+  Correct: 23 / 50
+  Average Confidence: 0.4520
+  Lowest Confidence: 0.0909
+  Highest Confidence: 0.6900
+Class 95:
+  Accuracy: 46.00%
+  Correct: 23 / 50
+  Average Confidence: 0.3652
+  Lowest Confidence: 0.0883
+  Highest Confidence: 0.6291
+Class 96:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.3782
+  Lowest Confidence: 0.0900
+  Highest Confidence: 0.6233
+Class 97:
+  Accuracy: 36.00%
+  Correct: 18 / 50
+  Average Confidence: 0.2814
+  Lowest Confidence: 0.0820
+  Highest Confidence: 0.6242
+Class 98:
+  Accuracy: 46.00%
+  Correct: 23 / 50
+  Average Confidence: 0.4096
+  Lowest Confidence: 0.0533
+  Highest Confidence: 0.6926
+Class 99:
+  Accuracy: 8.00%
+  Correct: 4 / 50
+  Average Confidence: 0.2423
+  Lowest Confidence: 0.0478
+  Highest Confidence: 0.6489
+Class 100:
+  Accuracy: 12.00%
+  Correct: 6 / 50
+  Average Confidence: 0.2687
+  Lowest Confidence: 0.0499
+  Highest Confidence: 0.6258
+Class 101:
+  Accuracy: 60.00%
+  Correct: 30 / 50
+  Average Confidence: 0.4254
+  Lowest Confidence: 0.0989
+  Highest Confidence: 0.6436
+Class 102:
+  Accuracy: 32.00%
+  Correct: 16 / 50
+  Average Confidence: 0.3064
+  Lowest Confidence: 0.0744
+  Highest Confidence: 0.6382
+Class 103:
+  Accuracy: 78.00%
+  Correct: 39 / 50
+  Average Confidence: 0.5576
+  Lowest Confidence: 0.0739
+  Highest Confidence: 0.7258
+Class 104:
+  Accuracy: 32.00%
+  Correct: 16 / 50
+  Average Confidence: 0.3341
+  Lowest Confidence: 0.0919
+  Highest Confidence: 0.5985
+Class 105:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.2600
+  Lowest Confidence: 0.0857
+  Highest Confidence: 0.5783
+Class 106:
+  Accuracy: 22.00%
+  Correct: 11 / 50
+  Average Confidence: 0.2808
+  Lowest Confidence: 0.0656
+  Highest Confidence: 0.6241
+Class 107:
+  Accuracy: 62.00%
+  Correct: 31 / 50
+  Average Confidence: 0.4757
+  Lowest Confidence: 0.0507
+  Highest Confidence: 0.7121
+Class 108:
+  Accuracy: 62.00%
+  Correct: 31 / 50
+  Average Confidence: 0.3829
+  Lowest Confidence: 0.0796
+  Highest Confidence: 0.6674
+Class 109:
+  Accuracy: 42.00%
+  Correct: 21 / 50
+  Average Confidence: 0.3114
+  Lowest Confidence: 0.0673
+  Highest Confidence: 0.6700
+Class 110:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.2750
+  Lowest Confidence: 0.0756
+  Highest Confidence: 0.6083
+Class 111:
+  Accuracy: 68.00%
+  Correct: 34 / 50
+  Average Confidence: 0.4358
+  Lowest Confidence: 0.0854
+  Highest Confidence: 0.7229
+Class 112:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.3346
+  Lowest Confidence: 0.0764
+  Highest Confidence: 0.6080
+Class 113:
+  Accuracy: 32.00%
+  Correct: 16 / 50
+  Average Confidence: 0.3058
+  Lowest Confidence: 0.0832
+  Highest Confidence: 0.6557
+Class 114:
+  Accuracy: 40.00%
+  Correct: 20 / 50
+  Average Confidence: 0.3340
+  Lowest Confidence: 0.0562
+  Highest Confidence: 0.5978
+Class 115:
+  Accuracy: 80.00%
+  Correct: 40 / 50
+  Average Confidence: 0.4958
+  Lowest Confidence: 0.1038
+  Highest Confidence: 0.7265
+Class 116:
+  Accuracy: 34.00%
+  Correct: 17 / 50
+  Average Confidence: 0.3506
+  Lowest Confidence: 0.0956
+  Highest Confidence: 0.6764
+Class 117:
+  Accuracy: 52.00%
+  Correct: 26 / 50
+  Average Confidence: 0.3644
+  Lowest Confidence: 0.0821
+  Highest Confidence: 0.6342
+Class 118:
+  Accuracy: 62.00%
+  Correct: 31 / 50
+  Average Confidence: 0.4684
+  Lowest Confidence: 0.0906
+  Highest Confidence: 0.6830
+Class 119:
+  Accuracy: 32.00%
+  Correct: 16 / 50
+  Average Confidence: 0.2554
+  Lowest Confidence: 0.0665
+  Highest Confidence: 0.5416
+Class 120:
+  Accuracy: 20.00%
+  Correct: 10 / 50
+  Average Confidence: 0.2756
+  Lowest Confidence: 0.0639
+  Highest Confidence: 0.6139
+Class 121:
+  Accuracy: 42.00%
+  Correct: 21 / 50
+  Average Confidence: 0.4206
+  Lowest Confidence: 0.0541
+  Highest Confidence: 0.6520
+Class 122:
+  Accuracy: 16.00%
+  Correct: 8 / 50
+  Average Confidence: 0.2802
+  Lowest Confidence: 0.0555
+  Highest Confidence: 0.5327
+Class 123:
+  Accuracy: 24.00%
+  Correct: 12 / 50
+  Average Confidence: 0.3030
+  Lowest Confidence: 0.0650
+  Highest Confidence: 0.6133
+Class 124:
+  Accuracy: 72.00%
+  Correct: 36 / 50
+  Average Confidence: 0.4549
+  Lowest Confidence: 0.0720
+  Highest Confidence: 0.6887
+Class 125:
+  Accuracy: 26.00%
+  Correct: 13 / 50
+  Average Confidence: 0.2972
+  Lowest Confidence: 0.0848
+  Highest Confidence: 0.6316
+Class 126:
+  Accuracy: 44.00%
+  Correct: 22 / 50
+  Average Confidence: 0.3734
+  Lowest Confidence: 0.0659
+  Highest Confidence: 0.6541
+Class 127:
+  Accuracy: 44.00%
+  Correct: 22 / 50
+  Average Confidence: 0.3531
+  Lowest Confidence: 0.0640
+  Highest Confidence: 0.6326
+Class 128:
+  Accuracy: 50.00%
+  Correct: 25 / 50
+  Average Confidence: 0.3549
+  Lowest Confidence: 0.0561
+  Highest Confidence: 0.6688
+Class 129:
+  Accuracy: 52.00%
+  Correct: 26 / 50
+  Average Confidence: 0.3747
+  Lowest Confidence: 0.0637
+  Highest Confidence: 0.6345
+Class 130:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.2879
+  Lowest Confidence: 0.0684
+  Highest Confidence: 0.6447
+Class 131:
+  Accuracy: 10.00%
+  Correct: 5 / 50
+  Average Confidence: 0.2307
+  Lowest Confidence: 0.0518
+  Highest Confidence: 0.5914
+Class 132:
+  Accuracy: 20.00%
+  Correct: 10 / 50
+  Average Confidence: 0.2966
+  Lowest Confidence: 0.0621
+  Highest Confidence: 0.6062
+Class 133:
+  Accuracy: 68.00%
+  Correct: 34 / 50
+  Average Confidence: 0.4990
+  Lowest Confidence: 0.0855
+  Highest Confidence: 0.7184
+Class 134:
+  Accuracy: 44.00%
+  Correct: 22 / 50
+  Average Confidence: 0.3716
+  Lowest Confidence: 0.0825
+  Highest Confidence: 0.6317
+Class 135:
+  Accuracy: 22.00%
+  Correct: 11 / 50
+  Average Confidence: 0.3291
+  Lowest Confidence: 0.0843
+  Highest Confidence: 0.5834
+Class 136:
+  Accuracy: 30.00%
+  Correct: 15 / 50
+  Average Confidence: 0.3095
+  Lowest Confidence: 0.0686
+  Highest Confidence: 0.6366
+Class 137:
+  Accuracy: 16.00%
+  Correct: 8 / 50
+  Average Confidence: 0.3426
+  Lowest Confidence: 0.0810
+  Highest Confidence: 0.6138
+Class 138:
+  Accuracy: 8.00%
+  Correct: 4 / 50
+  Average Confidence: 0.2864
+  Lowest Confidence: 0.0606
+  Highest Confidence: 0.5846
+Class 139:
+  Accuracy: 10.00%
+  Correct: 5 / 50
+  Average Confidence: 0.2609
+  Lowest Confidence: 0.0659
+  Highest Confidence: 0.6150
+Class 140:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.3376
+  Lowest Confidence: 0.0592
+  Highest Confidence: 0.6432
+Class 141:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3240
+  Lowest Confidence: 0.0719
+  Highest Confidence: 0.6279
+Class 142:
+  Accuracy: 42.00%
+  Correct: 21 / 50
+  Average Confidence: 0.3445
+  Lowest Confidence: 0.0751
+  Highest Confidence: 0.6865
+Class 143:
+  Accuracy: 60.00%
+  Correct: 30 / 50
+  Average Confidence: 0.4374
+  Lowest Confidence: 0.0474
+  Highest Confidence: 0.7153
+Class 144:
+  Accuracy: 42.00%
+  Correct: 21 / 50
+  Average Confidence: 0.3348
+  Lowest Confidence: 0.0799
+  Highest Confidence: 0.6497
+Class 145:
+  Accuracy: 78.00%
+  Correct: 39 / 50
+  Average Confidence: 0.5196
+  Lowest Confidence: 0.0800
+  Highest Confidence: 0.6986
+Class 146:
+  Accuracy: 64.00%
+  Correct: 32 / 50
+  Average Confidence: 0.4268
+  Lowest Confidence: 0.1044
+  Highest Confidence: 0.6959
+Class 147:
+  Accuracy: 32.00%
+  Correct: 16 / 50
+  Average Confidence: 0.3238
+  Lowest Confidence: 0.0610
+  Highest Confidence: 0.6169
+Class 148:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3286
+  Lowest Confidence: 0.0845
+  Highest Confidence: 0.6284
+Class 149:
+  Accuracy: 44.00%
+  Correct: 22 / 50
+  Average Confidence: 0.3424
+  Lowest Confidence: 0.0863
+  Highest Confidence: 0.6668
+Class 150:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.3376
+  Lowest Confidence: 0.0557
+  Highest Confidence: 0.6592
+Class 151:
+  Accuracy: 24.00%
+  Correct: 12 / 50
+  Average Confidence: 0.2980
+  Lowest Confidence: 0.0763
+  Highest Confidence: 0.6155
+Class 152:
+  Accuracy: 42.00%
+  Correct: 21 / 50
+  Average Confidence: 0.4009
+  Lowest Confidence: 0.0973
+  Highest Confidence: 0.6409
+Class 153:
+  Accuracy: 54.00%
+  Correct: 27 / 50
+  Average Confidence: 0.4683
+  Lowest Confidence: 0.1398
+  Highest Confidence: 0.6779
+Class 154:
+  Accuracy: 50.00%
+  Correct: 25 / 50
+  Average Confidence: 0.3995
+  Lowest Confidence: 0.0887
+  Highest Confidence: 0.6968
+Class 155:
+  Accuracy: 54.00%
+  Correct: 27 / 50
+  Average Confidence: 0.3755
+  Lowest Confidence: 0.0934
+  Highest Confidence: 0.6587
+Class 156:
+  Accuracy: 26.00%
+  Correct: 13 / 50
+  Average Confidence: 0.2878
+  Lowest Confidence: 0.0589
+  Highest Confidence: 0.6382
+Class 157:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.3355
+  Lowest Confidence: 0.0691
+  Highest Confidence: 0.5887
+Class 158:
+  Accuracy: 20.00%
+  Correct: 10 / 50
+  Average Confidence: 0.3186
+  Lowest Confidence: 0.0602
+  Highest Confidence: 0.6504
+Class 159:
+  Accuracy: 16.00%
+  Correct: 8 / 50
+  Average Confidence: 0.2692
+  Lowest Confidence: 0.0517
+  Highest Confidence: 0.6182
+Class 160:
+  Accuracy: 34.00%
+  Correct: 17 / 50
+  Average Confidence: 0.3022
+  Lowest Confidence: 0.0570
+  Highest Confidence: 0.6596
+Class 161:
+  Accuracy: 26.00%
+  Correct: 13 / 50
+  Average Confidence: 0.2810
+  Lowest Confidence: 0.0741
+  Highest Confidence: 0.6433
+Class 162:
+  Accuracy: 50.00%
+  Correct: 25 / 50
+  Average Confidence: 0.3797
+  Lowest Confidence: 0.0760
+  Highest Confidence: 0.6830
+Class 163:
+  Accuracy: 42.00%
+  Correct: 21 / 50
+  Average Confidence: 0.3581
+  Lowest Confidence: 0.1081
+  Highest Confidence: 0.6490
+Class 164:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.3781
+  Lowest Confidence: 0.0678
+  Highest Confidence: 0.6764
+Class 165:
+  Accuracy: 66.00%
+  Correct: 33 / 50
+  Average Confidence: 0.4878
+  Lowest Confidence: 0.0604
+  Highest Confidence: 0.7132
+Class 166:
+  Accuracy: 78.00%
+  Correct: 39 / 50
+  Average Confidence: 0.5143
+  Lowest Confidence: 0.1300
+  Highest Confidence: 0.7123
+Class 167:
+  Accuracy: 36.00%
+  Correct: 18 / 50
+  Average Confidence: 0.3585
+  Lowest Confidence: 0.1039
+  Highest Confidence: 0.6434
+Class 168:
+  Accuracy: 16.00%
+  Correct: 8 / 50
+  Average Confidence: 0.2886
+  Lowest Confidence: 0.0829
+  Highest Confidence: 0.6550
+Class 169:
+  Accuracy: 32.00%
+  Correct: 16 / 50
+  Average Confidence: 0.3015
+  Lowest Confidence: 0.0718
+  Highest Confidence: 0.5825
+Class 170:
+  Accuracy: 56.00%
+  Correct: 28 / 50
+  Average Confidence: 0.4322
+  Lowest Confidence: 0.1224
+  Highest Confidence: 0.7055
+Class 171:
+  Accuracy: 40.00%
+  Correct: 20 / 50
+  Average Confidence: 0.3918
+  Lowest Confidence: 0.0646
+  Highest Confidence: 0.6492
+Class 172:
+  Accuracy: 16.00%
+  Correct: 8 / 50
+  Average Confidence: 0.3000
+  Lowest Confidence: 0.1064
+  Highest Confidence: 0.6320
+Class 173:
+  Accuracy: 62.00%
+  Correct: 31 / 50
+  Average Confidence: 0.4629
+  Lowest Confidence: 0.0925
+  Highest Confidence: 0.6996
+Class 174:
+  Accuracy: 46.00%
+  Correct: 23 / 50
+  Average Confidence: 0.3641
+  Lowest Confidence: 0.0754
+  Highest Confidence: 0.6512
+Class 175:
+  Accuracy: 14.00%
+  Correct: 7 / 50
+  Average Confidence: 0.2368
+  Lowest Confidence: 0.0470
+  Highest Confidence: 0.5978
+Class 176:
+  Accuracy: 80.00%
+  Correct: 40 / 50
+  Average Confidence: 0.5211
+  Lowest Confidence: 0.0711
+  Highest Confidence: 0.6995
+Class 177:
+  Accuracy: 38.00%
+  Correct: 19 / 50
+  Average Confidence: 0.3279
+  Lowest Confidence: 0.0601
+  Highest Confidence: 0.5931
+Class 178:
+  Accuracy: 26.00%
+  Correct: 13 / 50
+  Average Confidence: 0.3421
+  Lowest Confidence: 0.0743
+  Highest Confidence: 0.6319
+Class 179:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3008
+  Lowest Confidence: 0.0790
+  Highest Confidence: 0.6507
+Class 180:
+  Accuracy: 10.00%
+  Correct: 5 / 50
+  Average Confidence: 0.2763
+  Lowest Confidence: 0.0771
+  Highest Confidence: 0.6309
+Class 181:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3121
+  Lowest Confidence: 0.0705
+  Highest Confidence: 0.6891
+Class 182:
+  Accuracy: 26.00%
+  Correct: 13 / 50
+  Average Confidence: 0.3239
+  Lowest Confidence: 0.0788
+  Highest Confidence: 0.6446
+Class 183:
+  Accuracy: 42.00%
+  Correct: 21 / 50
+  Average Confidence: 0.3868
+  Lowest Confidence: 0.1054
+  Highest Confidence: 0.6894
+Class 184:
+  Accuracy: 46.00%
+  Correct: 23 / 50
+  Average Confidence: 0.3795
+  Lowest Confidence: 0.0925
+  Highest Confidence: 0.6223
+Class 185:
+  Accuracy: 48.00%
+  Correct: 24 / 50
+  Average Confidence: 0.3976
+  Lowest Confidence: 0.0913
+  Highest Confidence: 0.6944
+Class 186:
+  Accuracy: 54.00%
+  Correct: 27 / 50
+  Average Confidence: 0.3922
+  Lowest Confidence: 0.1076
+  Highest Confidence: 0.6702
+Class 187:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.2889
+  Lowest Confidence: 0.0431
+  Highest Confidence: 0.5792
+Class 188:
+  Accuracy: 30.00%
+  Correct: 15 / 50
+  Average Confidence: 0.2965
+  Lowest Confidence: 0.0798
+  Highest Confidence: 0.5752
+Class 189:
+  Accuracy: 56.00%
+  Correct: 28 / 50
+  Average Confidence: 0.3696
+  Lowest Confidence: 0.0841
+  Highest Confidence: 0.6057
+Class 190:
+  Accuracy: 42.00%
+  Correct: 21 / 50
+  Average Confidence: 0.3492
+  Lowest Confidence: 0.1093
+  Highest Confidence: 0.6126
+Class 191:
+  Accuracy: 56.00%
+  Correct: 28 / 50
+  Average Confidence: 0.4600
+  Lowest Confidence: 0.0776
+  Highest Confidence: 0.7021
+Class 192:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3741
+  Lowest Confidence: 0.0958
+  Highest Confidence: 0.6321
+Class 193:
+  Accuracy: 74.00%
+  Correct: 37 / 50
+  Average Confidence: 0.4910
+  Lowest Confidence: 0.0858
+  Highest Confidence: 0.7159
+Class 194:
+  Accuracy: 54.00%
+  Correct: 27 / 50
+  Average Confidence: 0.4016
+  Lowest Confidence: 0.0700
+  Highest Confidence: 0.6783
+Class 195:
+  Accuracy: 30.00%
+  Correct: 15 / 50
+  Average Confidence: 0.3384
+  Lowest Confidence: 0.0945
+  Highest Confidence: 0.6112
+Class 196:
+  Accuracy: 50.00%
+  Correct: 25 / 50
+  Average Confidence: 0.4340
+  Lowest Confidence: 0.1142
+  Highest Confidence: 0.6778
+Class 197:
+  Accuracy: 34.00%
+  Correct: 17 / 50
+  Average Confidence: 0.3440
+  Lowest Confidence: 0.0658
+  Highest Confidence: 0.6584
+Class 198:
+  Accuracy: 50.00%
+  Correct: 25 / 50
+  Average Confidence: 0.3966
+  Lowest Confidence: 0.1352
+  Highest Confidence: 0.6413
+Class 199:
+  Accuracy: 28.00%
+  Correct: 14 / 50
+  Average Confidence: 0.3512
+  Lowest Confidence: 0.0686
+  Highest Confidence: 0.6744
