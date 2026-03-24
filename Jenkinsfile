@@ -27,7 +27,8 @@ pipeline {
             steps {
                 sh '''
                     set -eux
-                    dvc pull data/tiny-imagenet-200.dvc
+                    python3 -m pip install --user dvc
+                    python3 -m dvc pull data/tiny-imagenet-200.dvc
                     ls -la data/tiny-imagenet-200
                     ls -la data/tiny-imagenet-200/train
                 '''
@@ -87,6 +88,7 @@ pipeline {
                         TAG=$(git rev-parse --short HEAD)
 
                         docker run --rm \
+                            --gpus all \
                             -e WANDB_API_KEY="$WANDB_API_KEY" \
                             -v "$WORKSPACE/data:/app/data" \
                             "${IMAGE_NAME}:${TAG}" \
