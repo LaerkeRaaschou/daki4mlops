@@ -27,6 +27,12 @@ def _setup_case():
     local_rank = 0
 
     return model, loader, criterion, optimizer, device, epoch, device_type, local_rank
+    device_type = "cpu"
+    epoch = 1
+
+    local_rank = 0
+
+    return model, loader, criterion, optimizer, device, epoch, device_type, local_rank
 
 
 def test_train_model_returns_finite_loss(monkeypatch):
