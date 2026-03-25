@@ -199,6 +199,16 @@ def main(cfg):
 
     transform_train = transforms.Compose(
         [
+            transforms.RandomResizedCrop(64, scale=(0.7, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ColorJitter(0.2, 0.2, 0.2, 0.1),  # optional
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ]
+    )
+
+    transform_val = transforms.Compose(
+        [
             transforms.Resize((64, 64)),
             transforms.ToTensor(),
             transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
@@ -213,7 +223,7 @@ def main(cfg):
     )
 
     val_dataset = get_dataset(
-        train_dir=f"{data_path}/train", transform=transform_train, mapping_path=None
+        train_dir=f"{data_path}/train", transform=transform_val, mapping_path=None
     )
 
     # part into real val and train dataset = non overlapping
