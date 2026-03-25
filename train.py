@@ -9,6 +9,8 @@ from hydra.utils import instantiate
 from torch.nn.parallel import DistributedDataParallel as DDP
 import os
 import torch.distributed as dist
+import mlflow
+import mlflow.pytorch 
 
 
 # Getting variables nesesary for multi gpu runs
@@ -342,3 +344,13 @@ transform_train2 = transforms.Compose(
     )
 
 """
+
+
+
+mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
+
+
+mlflow.pytorch.log_model(
+                    model,
+                    artifact_path="model", 
+                    registered_model_name="tiny-imagenet-resnet18")
