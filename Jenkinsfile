@@ -13,6 +13,8 @@ pipeline {
         DOCKERFILE = 'DockerFile'
         IMAGE_NAME  = 'daki4mlops'
         DOCKERHUB_REPO = 'ainger24/daki4mlops'
+        MLFLOW_TRACKING_URI = 'http://172.24.198.42:5050'
+        MLFLOW_EXPERIMENT_NAME = 'tiny-imagenet-resnet18'
     }
 
 
@@ -85,8 +87,6 @@ pipeline {
                     TAG=$(git rev-parse --short HEAD)
                     docker run --rm "${IMAGE_NAME}:${TAG}" \
                         python3 -m pytest unit_tests -v
-                    docker run --rm "${IMAGE_NAME}:${TAG}" \
-                        python3 -m pytest unit_tests -v
                 '''
             }
         }
@@ -98,15 +98,21 @@ pipeline {
                 expression { params.RUN_TRAINING }
             }
             steps {
-                withCredentials([string(credentialsId: 'wandb-api-key', variable: 'WANDB_API_KEY')]) {
+                withCredentials([
+                    string(credentialsId: 'wandb-api-key', variable: 'WANDB_API_KEY')
+                    ]) {
                     sh '''
                         set -eux
                         TAG=$(git rev-parse --short HEAD)
 
-                        docker run --rm \
-                            --gpus all \
+                        mkdir -p "$WORKSPACE/artifacts_gr5"
+
+                        docker run --rm --gpus all \
                             -e WANDB_API_KEY="$WANDB_API_KEY" \
+                            -e MLFLOW_TRACKING_URI="$MLFLOW_TRACKING_URI" \
+                            -e MLFLOW_EXPERIMENT_NAME="$MLFLOW_EXPERIMENT_NAME" \
                             -v "$WORKSPACE/data:/app/data" \
+                            -v "$WORKSPACE/artifacts_gr5:/app/artifacts" \
                             "${IMAGE_NAME}:${TAG}" \
                             python train.py trainer.epochs="${EPOCHS}" compile=false
                     '''
@@ -120,7 +126,7 @@ pipeline {
                 expression { params.RUN_TRAINING }
             }
             steps {
-                echo 'Model artifact archiving will be added next.'
+                archiveArtifacts artifacts: 'artifacts_gr5/**', fingerprint: true, allowEmptyArchive: true
             }
         }
 
@@ -128,7 +134,6 @@ pipeline {
         stage('Push Docker container to DockerHub') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-credential',
                     credentialsId: 'dockerhub-credential',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
@@ -138,9 +143,6 @@ pipeline {
                         TAG=$(git rev-parse --short HEAD)
 
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker tag "${IMAGE_NAME}:${TAG}" "${DOCKERHUB_REPO}:${TAG}"
-                        docker push "${DOCKERHUB_REPO}:${TAG}"
-                        docker logout
                         docker tag "${IMAGE_NAME}:${TAG}" "${DOCKERHUB_REPO}:${TAG}"
                         docker push "${DOCKERHUB_REPO}:${TAG}"
                         docker logout
