@@ -4,6 +4,10 @@ import torch.nn
 import os
 import datetime
 from model.resnet18 import ResNet18
+from torchvision import transforms
+
+from data.dataloader import get_test_loader
+from test import report_statistics, test_model
 
 torch.backends.quantized.engine = "qnnpack"
 
@@ -60,6 +64,45 @@ def run_inference(model_path, data, q):
     return (end - start).total_seconds()
 
 
+def test(model_path, version):
+    if version:
+        model = load_quantized_model(model_path)
+    else:
+        model = ResNet18(num_classes=200)
+        model = torch.compile(model, backend="eager")
+        model.load_state_dict(
+            torch.load(model_path, weights_only=False, map_location="cpu")
+        )
+        model = model._orig_mod
+    num_classes = 200
+    batch_size = 1
+    data_path = "data/tiny-imagenet-200/val/images"
+    annotations = "data/tiny-imagenet-200/val/val_annotations.txt"
+    save_stats_path = f"test_statistics_{version}.txt"
+    mapping_path = "data/mapping_path.json"
+    test_transform = transforms.Compose(
+        [
+            transforms.Resize((64, 64)),
+            transforms.ConvertImageDtype(torch.float32),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ]
+    )
+
+    test_loader = get_test_loader(
+        mapping_path=mapping_path,
+        test_dir=data_path,
+        transform_test=test_transform,
+        test_annotations=annotations,
+        batch_size=batch_size,
+        shuffle=False,
+    )
+    start = datetime.datetime.now()
+    total_stats, class_stats = test_model(model, num_classes, test_loader)
+    end = datetime.datetime.now()
+    report_statistics(total_stats, class_stats, save_stats_path)
+    return (end - start).total_seconds()
+
+
 def main():
     full_model = "model/trained_models/resnet_18_classifier_best_acc_epocha44.pt"
     quantized_model = "model/quantized_models/quantized44.pt"
@@ -68,7 +111,11 @@ def main():
     if os.path.exists(quantized_model):
         f_time = run_inference(full_model, data, q=False)
         q_time = run_inference(quantized_model, data, q=True)
-        print("Difference between models in seconds")
+        print("Difference between models in seconds (dummy data)")
+        print("float32:", f_time, "  qint8:", q_time)
+        f_time = test(model_path=full_model, version=False)
+        q_time = test(model_path=quantized_model, version=True)
+        print("Difference between models in seconds (test data)")
         print("float32:", f_time, "  qint8:", q_time)
     else:
         quantize_model(full_model, quantized_model)

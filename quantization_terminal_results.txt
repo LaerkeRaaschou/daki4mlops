@@ -1,0 +1,48 @@
+Difference between models in seconds (dummy data)
+float32: 0.398572   qint8: 0.271149
+Overall Test Results:
+Accuracy: 42.19%
+Average Confidence: 0.4476
+Lowest Confidence: 0.0380
+Highest Confidence: 0.9988
+Total Samples: 10000
+
+Top 5 Best Performing Classes:
+  Class 81: Acc=82.00%, Avg Conf=0.6775, Samples=50
+  Class 166: Acc=80.00%, Avg Conf=0.6535, Samples=50
+  Class 115: Acc=80.00%, Avg Conf=0.5890, Samples=50
+  Class 44: Acc=80.00%, Avg Conf=0.6761, Samples=50
+  Class 193: Acc=78.00%, Avg Conf=0.7175, Samples=50
+
+Top 5 Worst Performing Classes:
+  Class 139: Acc=12.00%, Avg Conf=0.3113, Samples=50
+  Class 159: Acc=12.00%, Avg Conf=0.2760, Samples=50
+  Class 16: Acc=14.00%, Avg Conf=0.3147, Samples=50
+  Class 77: Acc=14.00%, Avg Conf=0.3210, Samples=50
+  Class 122: Acc=14.00%, Avg Conf=0.2715, Samples=50
+
+Detailed class statistics saved to 'test_statistics_False.txt'
+Overall Test Results:
+Accuracy: 40.78%
+Average Confidence: 0.3592
+Lowest Confidence: 0.0431
+Highest Confidence: 0.7265
+Total Samples: 10000
+
+Top 5 Best Performing Classes:
+  Class 81: Acc=82.00%, Avg Conf=0.5177, Samples=50
+  Class 176: Acc=80.00%, Avg Conf=0.5211, Samples=50
+  Class 115: Acc=80.00%, Avg Conf=0.4958, Samples=50
+  Class 166: Acc=78.00%, Avg Conf=0.5143, Samples=50
+  Class 145: Acc=78.00%, Avg Conf=0.5196, Samples=50
+
+Top 5 Worst Performing Classes:
+  Class 99: Acc=8.00%, Avg Conf=0.2423, Samples=50
+  Class 138: Acc=8.00%, Avg Conf=0.2864, Samples=50
+  Class 131: Acc=10.00%, Avg Conf=0.2307, Samples=50
+  Class 139: Acc=10.00%, Avg Conf=0.2609, Samples=50
+  Class 180: Acc=10.00%, Avg Conf=0.2763, Samples=50
+
+Detailed class statistics saved to 'test_statistics_True.txt'
+Difference between models in seconds (test data)
+float32: 46.558502   qint8: 34.342938
