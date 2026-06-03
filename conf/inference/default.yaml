@@ -1,0 +1,5 @@
+weights_path: model/trained_models/resnet_18_classifier_best_acc_epoch49.pt
+num_classes: 200
+input_path: data/tiny-imagenet-200/val/images
+class_labels_path: data/tiny-imagenet-200/words.txt
+output_path: predictions.csv
