@@ -6,6 +6,7 @@ defaults:
   - loss: ce
   - earlystopping: default
   - amp: default
+  - inference: default
   - _self_
 
 seed: 42

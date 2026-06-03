@@ -120,6 +120,25 @@ pipeline {
             }
         }
 
+        stage('Evaluate Model') {
+            when {expression { params.RUN_TRAINING }}
+            steps {
+                sh '''
+                    set -eux
+                    TAG=$(git rev-parse --short HEAD)
+
+                    docker run --rm --gpus all \
+                        -e MLFLOW_TRACKING_URI="$MLFLOW_TRACKING_URI" \
+                        -v "$WORKSPACE/artifacts_gr5:/app/artifacts" \
+                        -v "$WORKSPACE/data:/app/data" \
+                        "${IMAGE_NAME}:${TAG}" \
+                        python test.py \
+                            --model-path /app/artifacts/model.pth \
+                            --data-path /app/data/tiny-imagenet-200
+                '''
+            }
+        }
+
 
         stage('Archive Model Artifacts') {
             when {

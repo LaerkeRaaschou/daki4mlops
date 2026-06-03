@@ -100,6 +100,7 @@ def train_model(
 
     if local_rank == 0:
         wandb.log({"Train Avg Loss": avg_loss})
+        mlflow.log_metric("train_loss", avg_loss, step=epoch)
 
     return avg_loss
 
@@ -146,6 +147,12 @@ def val_model(model, criterion, batches, device, epoch, num_classes=200):
             "Epoch": epoch,
         }
     )
+
+    mlflow.log_metric("val_loss", avg_loss, step=epoch)
+    mlflow.log_metric("val_accuracy", accuracy, step=epoch)
+    mlflow.log_metric("val_precision", precision, step=epoch)
+    mlflow.log_metric("val_recall", recall, step=epoch)
+
     return avg_loss, accuracy, precision, recall
 
 
@@ -176,6 +183,18 @@ def main(cfg):
         # Start wandb
         wandb.login()
         wandb.init(project="tiny-imagenet-resnet18")
+
+        mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
+        mlflow.set_experiment(os.environ["MLFLOW_EXPERIMENT_NAME"])
+        mlflow.start_run()
+
+        mlflow.log_params({
+            "epochs": cfg.trainer.epochs,
+            "batch_size": cfg.data.batch_size,
+            "device": cfg.device,
+        })
+
+        mlflow.log_dict(dict(cfg), "config.yaml")
 
     # Initialize model
     model = ResNet18(num_classes=200).to(device)
@@ -289,10 +308,11 @@ def main(cfg):
                     best = val_acc
 
             if is_best:
-                torch.save(
-                    model.state_dict(),
-                    f"finished_model/resnet_18_classifier_best_acc_epoch{epoch}.pt",
-                )
+                os.makedirs("artifacts", exist_ok=True)
+                model_path = f"artifacts/best_model_epoch{epoch}.pt"
+                torch.save(model.state_dict(), model_path)
+                mlflow.log_artifact(model_path)
+                
 
             stop = False
             if cfg.earlystopping.use:
@@ -317,6 +337,13 @@ def main(cfg):
                     model.state_dict(),
                     f"finished_model/resnet_18_classifier_epoch{epoch}.pt",
                 )
+                mlflow.pytorch.log_model(
+                    model,
+                    artifact_path="final_model",
+                )
+
+                mlflow.end_run()
+                
                 break
 
     if local_rank == 0:
@@ -344,13 +371,3 @@ transform_train2 = transforms.Compose(
     )
 
 """
-
-
-
-mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
-
-
-mlflow.pytorch.log_model(
-                    model,
-                    artifact_path="model", 
-                    registered_model_name="tiny-imagenet-resnet18")
