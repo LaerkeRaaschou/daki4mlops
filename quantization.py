@@ -54,9 +54,10 @@ def run_inference(model_path, data, q):
         _ = model(data)  # warmup
     start = datetime.datetime.now()
     with torch.no_grad():
-        _ = model(data)
+        for i in range(100):
+            _ = model(data)
     end = datetime.datetime.now()
-    return (end - start).microseconds
+    return (end - start).total_seconds()
 
 
 def main():
@@ -67,7 +68,7 @@ def main():
     if os.path.exists(quantized_model):
         f_time = run_inference(full_model, data, q=False)
         q_time = run_inference(quantized_model, data, q=True)
-        print("Difference between models in microseconds")
+        print("Difference between models in seconds")
         print("float32:", f_time, "  qint8:", q_time)
     else:
         quantize_model(full_model, quantized_model)

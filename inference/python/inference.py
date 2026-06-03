@@ -1,14 +1,10 @@
-import sys
 import os
 import csv
-import os
-import csv
+import json
 
 import hydra
-import hydra
 import torch
-from torchvision import transforms
-from PIL import Image
+from hydra.utils import to_absolute_path
 from torchvision import transforms
 from PIL import Image
 
@@ -16,12 +12,20 @@ from model.resnet18 import ResNet18
 
 
 def initialize_model(num_classes, weights_path, device):
-    model = ResNet18(num_classes)
     if weights_path is None:
-        print("No weights provided. Please provide model weights for inference.")
-        sys.exit(1)
+        raise ValueError("No weights provided. Please provide model weights for inference.")
+    if not os.path.isfile(weights_path):
+        raise FileNotFoundError(f"Model weights file not found: {weights_path}")
+
+    model = ResNet18(num_classes)
 
     weights = torch.load(weights_path, map_location=device)
+    prefix = "_orig_mod."
+    if any(key.startswith(prefix) for key in weights):
+        weights = {
+            key[len(prefix) :] if key.startswith(prefix) else key: value
+            for key, value in weights.items()
+        }
     model.load_state_dict(weights)
 
     model.eval()
@@ -31,11 +35,15 @@ def initialize_model(num_classes, weights_path, device):
 
 
 def load_inputs(dir_path):
-    return [
+    if not os.path.isdir(dir_path):
+        raise FileNotFoundError(f"Input image directory not found: {dir_path}")
+
+    return sorted(
         os.path.join(dir_path, f)
         for f in os.listdir(dir_path)
-        if f.endswith((".jpg", ".jpeg", ".png"))
-    ]
+        if os.path.isfile(os.path.join(dir_path, f))
+        and f.lower().endswith((".jpg", ".jpeg", ".png"))
+    )
 
 
 def preprocess_sample(sample_path, transform):
@@ -95,29 +103,44 @@ def inference(model, batches, device):
 
 
 def build_train_id_to_class_id_map(mapping_file):
-    train_id_to_class_id = {}
+    if not os.path.isfile(mapping_file):
+        raise FileNotFoundError(f"Class index mapping file not found: {mapping_file}")
 
-    with open(mapping_file, "r") as file:
-        for line in file:
-            fields = line.strip().split("\t")
-            if len(fields) >= 2:
-                class_id = fields[0]
-                train_id = int(fields[1])
-                train_id_to_class_id[train_id] = class_id
+    with open(mapping_file, "r", encoding="utf-8") as file:
+        class_id_to_train_id = json.load(file)
+
+    if not isinstance(class_id_to_train_id, dict):
+        raise ValueError(
+            "Class index mapping file must be JSON in the form "
+            "{class_id: train_id}."
+        )
+
+    train_id_to_class_id = {
+        int(train_id): class_id for class_id, train_id in class_id_to_train_id.items()
+    }
+
+    if not train_id_to_class_id:
+        raise ValueError(f"Class index mapping file is empty: {mapping_file}")
 
     return train_id_to_class_id
 
 
 def build_class_id_to_label_map(mapping_file):
+    if not os.path.isfile(mapping_file):
+        raise FileNotFoundError(f"Class label mapping file not found: {mapping_file}")
+
     class_id_to_label = {}
 
-    with open(mapping_file, "r") as file:
+    with open(mapping_file, "r", encoding="utf-8") as file:
         for line in file:
-            fields = line.strip().split("\t")
+            fields = line.strip().split("\t", maxsplit=1)
             if len(fields) >= 2:
                 class_id = fields[0]
                 class_label = fields[1]
                 class_id_to_label[class_id] = class_label
+
+    if not class_id_to_label:
+        raise ValueError(f"Class label mapping file is empty: {mapping_file}")
 
     return class_id_to_label
 
@@ -128,7 +151,12 @@ def postprocess_predictions(predictions, train_id_to_class_id, class_id_to_label
     for pred in predictions:
         train_id = pred["predicted_class_idx"]
         class_id = train_id_to_class_id.get(train_id)
-        class_label = class_id_to_label.get(class_id, str(class_id))
+        if class_id is None:
+            raise KeyError(f"No class ID mapping found for train index {train_id}.")
+
+        class_label = class_id_to_label.get(class_id)
+        if class_label is None:
+            raise KeyError(f"No class label mapping found for class ID {class_id}.")
 
         final_predictions.append(
             {
@@ -169,6 +197,10 @@ def output_predictions(predictions, output_path="predictions.csv"):
         "confidence",
     ]
 
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
     with open(output_path, "w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
@@ -177,14 +209,15 @@ def output_predictions(predictions, output_path="predictions.csv"):
     print(f"Predictions saved to: {output_path}")
 
 
-@hydra.main(config_path="conf", config_name="config", version_base=None)
+@hydra.main(config_path="../../conf", config_name="config", version_base=None)
 def main(cfg):
-    data_path = cfg.data.root
-    weights_path = cfg.model.weights_path
+    data_path = to_absolute_path(str(cfg.inference.input_path))
+    weights_path = to_absolute_path(str(cfg.inference.weights_path))
     batch_size = cfg.data.batch_size
-    train_id_to_class_id_path = cfg.data.mapping_path
-    # class_id_to_label_path = cfg.model.class_id_label_map
-    class_id_to_label_path = "data\tiny-imagenet-200\words.txt"
+    num_classes = cfg.inference.num_classes
+    train_id_to_class_id_path = to_absolute_path(str(cfg.data.mapping_path))
+    class_id_to_label_path = to_absolute_path(str(cfg.inference.class_labels_path))
+    output_path = to_absolute_path(str(cfg.inference.output_path))
 
     device = cfg.device
     if device == "cuda" and not torch.cuda.is_available():
@@ -210,7 +243,7 @@ def main(cfg):
     batches = create_batches(samples, batch_size, transform)
 
     model = initialize_model(
-        num_classes=200,
+        num_classes=num_classes,
         weights_path=weights_path,
         device=device,
     )
@@ -226,7 +259,7 @@ def main(cfg):
         class_id_to_label,
     )
 
-    output_predictions(final)
+    output_predictions(final, output_path)
 
 
 if __name__ == "__main__":
