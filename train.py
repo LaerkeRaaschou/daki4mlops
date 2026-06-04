@@ -10,7 +10,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import os
 import torch.distributed as dist
 import mlflow
-import mlflow.pytorch 
+import mlflow.pytorch
 
 
 # Getting variables nesesary for multi gpu runs
@@ -188,16 +188,18 @@ def main(cfg):
         mlflow.set_experiment(os.environ["MLFLOW_EXPERIMENT_NAME"])
         mlflow.start_run()
 
-        mlflow.log_params({
-            "epochs": cfg.trainer.epochs,
-            "batch_size": cfg.data.batch_size,
-            "device": cfg.device,
-        })
+        mlflow.log_params(
+            {
+                "epochs": cfg.trainer.epochs,
+                "batch_size": cfg.data.batch_size,
+                "device": cfg.device,
+            }
+        )
 
         mlflow.log_dict(dict(cfg), "config.yaml")
 
     # Initialize model
-    model = ResNet18(num_classes=200).to(device)
+    model = ResNet18(num_classes=cfg.data.classes).to(device)
     if cfg.compile:
         model = torch.compile(model, backend="eager")
 
@@ -314,7 +316,6 @@ def main(cfg):
                 model_path = f"artifacts/best_model_epoch{epoch}.pt"
                 torch.save(model.state_dict(), model_path)
                 mlflow.log_artifact(model_path)
-                
 
             stop = False
             if cfg.earlystopping.use:

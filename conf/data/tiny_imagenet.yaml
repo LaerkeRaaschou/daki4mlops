@@ -3,3 +3,6 @@ mapping_path: data/mapping_path.json
 
 batch_size: 64
 val_split: 0.1
+classes: 200
+train_img: 100000  # 500 per class
+test_img: 10000
