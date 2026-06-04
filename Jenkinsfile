@@ -31,28 +31,29 @@ pipeline {
         }
 
         stage('Pull Dataset') {
-            when {
-                expression { params.RUN_TRAINING }
-            }
+            when { expression { params.RUN_TRAINING } }
             steps {
                 withCredentials([
                     string(credentialsId: 'minio-user', variable: 'AWS_ACCESS_KEY_ID'),
                     string(credentialsId: 'minio-password', variable: 'AWS_SECRET_ACCESS_KEY')
-                    ]) {
-                        sh '''
-                            set -eux
-                            docker run --rm \
-                                -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
-                                -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
-                                -v "$WORKSPACE:/repo" \
-                                -w /repo \
-                                dvcorg/cml:latest \
-                                dvc pull data/tiny-imagenet-200.dvc
-                        '''
+                ]) {
+                    sh '''
+                        set -eux
+                        HOST_UID=$(id -u)
+                        HOST_GID=$(id -g)
+                        docker run --rm \
+                            -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+                            -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+                            -e HOST_UID="$HOST_UID" \
+                            -e HOST_GID="$HOST_GID" \
+                            -v "$WORKSPACE:/repo" \
+                            -w /repo \
+                            dvcorg/cml:latest \
+                            sh -c 'dvc pull data/tiny-imagenet-200.dvc && chown -R $HOST_UID:$HOST_GID /repo && chmod -R u+rwX /repo'
+                    '''
                 }
             }
         }
-
 
         stage('Docker Check') {
             steps {
@@ -214,15 +215,19 @@ pipeline {
             always {
                 sh '''
                     set +e
-                    echo "=== Fix workspace permissions before cleanup ==="
-                    chmod -R 777 "$WORKSPACE" 2>/dev/null || true
+                    HOST_UID=$(id -u)
+                    HOST_GID=$(id -g)
+                    docker run --rm \
+                        -e HOST_UID="$HOST_UID" \
+                        -e HOST_GID="$HOST_GID" \
+                        -v "$WORKSPACE:/repo" \
+                        alpine:latest \
+                        sh -c 'chown -R $HOST_UID:$HOST_GID /repo && chmod -R u+rwX /repo' || true
 
-                    echo "=== Remove DVC cache and generated folders ==="
-                    rm -rf "$WORKSPACE/.dvc" 2>/dev/null || true
+                    rm -rf "$WORKSPACE/.dvc/cache" 2>/dev/null || true
                     rm -rf "$WORKSPACE/data" 2>/dev/null || true
                     rm -rf "$WORKSPACE/artifacts_gr5" 2>/dev/null || true
 
-                    echo "=== Cleanup Docker containers/images ==="
                     TAG=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)
                     docker ps -aq --filter ancestor=${IMAGE_NAME}:${TAG} | xargs -r docker rm -f || true
                     docker ps -aq --filter ancestor=${DOCKERHUB_REPO}:${TAG} | xargs -r docker rm -f || true
