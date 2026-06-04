@@ -158,7 +158,7 @@ def report_statistics(total_stats, class_stats, save_file):
     return accuracy
 
 
-@hydra.main(config_path="../conf", config_name="config", version_base=None)
+@hydra.main(config_path="conf", config_name="config", version_base=None)
 def main(cfg):
     # torch.backends.cudnn.benchmark = True
     # torch.use_deterministic_algorithms(True)

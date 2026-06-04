@@ -211,7 +211,7 @@ pipeline {
                 -e MLFLOW_EXPERIMENT_NAME="$MLFLOW_EXPERIMENT_NAME" \
                 -e GIT_COMMIT="$TAG" \
                 "${IMAGE_NAME}:${TAG}" \
-                python deploy.py
+                python deploy_model.py
                 '''
             }
         }
