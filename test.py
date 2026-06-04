@@ -1,4 +1,5 @@
 import torch
+import hydra
 import torch.nn.functional as F
 from torchvision import transforms
 
@@ -154,19 +155,14 @@ def report_statistics(total_stats, class_stats, save_file):
 
     print(f"\nDetailed class statistics saved to '{save_file}'")
 
+    return accuracy
 
-# @hydra.main(config_path="../conf", config_name="config", version_base=None)
-def main():
+
+@hydra.main(config_path="../conf", config_name="config", version_base=None)
+def main(cfg):
     # torch.backends.cudnn.benchmark = True
     # torch.use_deterministic_algorithms(True)
-
-    num_classes = 200
-    weights_path = "model/trained_models/resnet_18_classifier_best_acc_epocha44.pt"
-    batch_size = 1
-    data_path = "data/tiny-imagenet-200/val/images"
-    annotations = "data/tiny-imagenet-200/val/val_annotations.txt"
-    save_stats_path = "test_statistics.txt"
-    mapping_path = "data/mapping_path.json"
+    
     test_transform = transforms.Compose(
         [
             transforms.Resize((64, 64)),
@@ -175,17 +171,17 @@ def main():
         ]
     )
 
-    model = initialize_model(num_classes, weights_path)
+    model = initialize_model(cfg.inference.num_classes, cfg.inference.weights_path)
     test_loader = get_test_loader(
-        mapping_path=mapping_path,
-        test_dir=data_path,
+        mapping_path=cfg.inference.mapping_path,
+        test_dir=cfg.inference.data_path,
         transform_test=test_transform,
-        test_annotations=annotations,
-        batch_size=batch_size,
+        test_annotations=cfg.inference.annotations,
+        batch_size=cfg.inference.batch_size,
         shuffle=False,
     )
-    total_stats, class_stats = test_model(model, num_classes, test_loader)
-    report_statistics(total_stats, class_stats, save_stats_path)
+    total_stats, class_stats = test_model(model, cfg.inference.num_classes, test_loader)
+    report_statistics(total_stats, class_stats, cfg.inference.save_stats_path)
 
 
 if __name__ == "__main__":
