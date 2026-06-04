@@ -11,6 +11,8 @@ import os
 import torch.distributed as dist
 import mlflow
 import mlflow.pytorch
+import datetime
+from carbontracker.tracker import CarbonTracker
 
 
 # Getting variables nesesary for multi gpu runs
@@ -184,6 +186,10 @@ def main(cfg):
         wandb.login()
         wandb.init(project="tiny-imagenet-resnet18")
 
+        tracker = None
+        if cfg.carbontracker:
+            tracker = CarbonTracker(epochs=cfg.trainer.epochs, components="gpu")
+
         mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
         mlflow.set_experiment(os.environ["MLFLOW_EXPERIMENT_NAME"])
         mlflow.start_run()
@@ -273,9 +279,17 @@ def main(cfg):
     training_finished = False
 
     for epoch in range(1, cfg.trainer.epochs + 1):
+        if cfg.carbontracker:
+            tracker.epoch_start()
+
+        # Reset the peak VRAM counter so each epoch is measured on its own
+        if device.type == "cuda":
+            torch.cuda.reset_peak_memory_stats()
+
         if sampler is not None:
             sampler.set_epoch(epoch)
 
+        start = datetime.datetime.now()
         train_loss = train_model(
             ddp_model,
             criterion,
@@ -287,6 +301,26 @@ def main(cfg):
             local_rank,
             scaler,
         )
+        # Wait for all GPU work to finish so the time and VRAM are accurate
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+        end = datetime.datetime.now()
+
+        epoch_time = (end - start).total_seconds()
+        peak_mb = 0.0
+        if device.type == "cuda":
+            peak_mb = torch.cuda.max_memory_allocated() / 1024**2
+
+        if local_rank == 0:
+            print(f"Epoch {epoch} train time: {epoch_time:.2f} s")
+            print(f"Peak VRAM: {peak_mb:.1f} MB")
+            wandb.log(
+                {
+                    "Epoch Train Time (s)": epoch_time,
+                    "Peak VRAM (MB)": peak_mb,
+                    "Epoch": epoch,
+                }
+            )
 
         if use_ddp:
             dist.barrier()
@@ -343,6 +377,8 @@ def main(cfg):
                     model.state_dict(),
                     "artifacts/final_model.pt",
                 )
+                if cfg.carbontracker:
+                    tracker.epoch_end()
                 mlflow.pytorch.log_model(model, artifact_path="final_model")
                 mlflow.end_run()
                 training_finished = True
@@ -356,21 +392,9 @@ def main(cfg):
 
     if use_ddp:
         dist.destroy_process_group()
+    if tracker:
+        tracker.stop()
 
 
 if __name__ == "__main__":
     main()
-
-
-"""
-transform_train2 = transforms.Compose(
-        [
-            transforms.RandomResizedCrop(64, scale=(0.7, 1.0)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ColorJitter(0.2, 0.2, 0.2, 0.1),  # optional
-            transforms.ToTensor(),
-            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-        ]
-    )
-
-"""
