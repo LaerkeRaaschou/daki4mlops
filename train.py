@@ -13,6 +13,7 @@ import mlflow
 import mlflow.pytorch
 import datetime
 from carbontracker.tracker import CarbonTracker
+from omegaconf import OmegaConf
 
 
 # Getting variables nesesary for multi gpu runs
@@ -181,12 +182,12 @@ def main(cfg):
         rank = 0
         world_size = 1
 
+    tracker = None
     if local_rank == 0:
         # Start wandb
         wandb.login()
         wandb.init(project="tiny-imagenet-resnet18")
 
-        tracker = None
         if cfg.carbontracker:
             tracker = CarbonTracker(epochs=cfg.trainer.epochs, components="gpu")
 
@@ -194,7 +195,7 @@ def main(cfg):
         mlflow.set_experiment(os.environ["MLFLOW_EXPERIMENT_NAME"])
         mlflow.start_run()
 
-        mlflow.log_artifact("model/README.md")
+        mlflow.log_artifact(hydra.utils.to_absolute_path("model/README.md"))
 
         mlflow.log_params(
             {
@@ -203,8 +204,10 @@ def main(cfg):
                 "device": cfg.device,
             }
         )
-
-        mlflow.log_dict(dict(cfg), "config.yaml")
+        mlflow.log_dict(
+            OmegaConf.to_container(cfg, resolve=True),
+            hydra.utils.to_absolute_path("config.yaml"),
+        )
 
     # Initialize model
     model = ResNet18(num_classes=cfg.data.classes).to(device)
@@ -279,7 +282,7 @@ def main(cfg):
     training_finished = False
 
     for epoch in range(1, cfg.trainer.epochs + 1):
-        if cfg.carbontracker:
+        if cfg.carbontracker and local_rank == 0:
             tracker.epoch_start()
 
         # Reset the peak VRAM counter so each epoch is measured on its own
@@ -348,8 +351,10 @@ def main(cfg):
                     best = val_acc
 
             if is_best:
-                os.makedirs("artifacts", exist_ok=True)
-                model_path = f"artifacts/best_model_epoch{epoch}.pt"
+                os.makedirs(hydra.utils.to_absolute_path("artifacts"), exist_ok=True)
+                model_path = hydra.utils.to_absolute_path(
+                    f"artifacts/best_model_epoch{epoch}.pt"
+                )
                 torch.save(model.state_dict(), model_path)
                 mlflow.log_artifact(model_path)
 
@@ -363,6 +368,9 @@ def main(cfg):
         if cfg.scheduler.use:
             scheduler.step()
 
+        if cfg.carbontracker and local_rank == 0:
+            tracker.epoch_end()
+
         if use_ddp:
             stop_tensor = torch.tensor(int(stop), device=device)
             dist.broadcast(stop_tensor, src=0)
@@ -372,27 +380,29 @@ def main(cfg):
         if stop:
             if local_rank == 0:
                 print(f"Early stopping at epoch {epoch}")
-                os.makedirs("artifacts", exist_ok=True)
+                os.makedirs(hydra.utils.to_absolute_path("artifacts"), exist_ok=True)
                 torch.save(
                     model.state_dict(),
-                    "artifacts/final_model.pt",
+                    hydra.utils.to_absolute_path("artifacts/final_model.pt"),
                 )
-                if cfg.carbontracker:
-                    tracker.epoch_end()
-                mlflow.pytorch.log_model(model, artifact_path="final_model")
+                to_log = model._orig_mod if cfg.compile else model
+                mlflow.pytorch.log_model(to_log, artifact_path="final_model")
                 mlflow.end_run()
                 training_finished = True
             break
 
     if local_rank == 0 and not training_finished:
-        os.makedirs("artifacts", exist_ok=True)
-        torch.save(model.state_dict(), "artifacts/final_model.pt")
-        mlflow.pytorch.log_model(model, artifact_path="final_model")
+        os.makedirs(hydra.utils.to_absolute_path("artifacts"), exist_ok=True)
+        torch.save(
+            model.state_dict(), hydra.utils.to_absolute_path("artifacts/final_model.pt")
+        )
+        to_log = model._orig_mod if cfg.compile else model
+        mlflow.pytorch.log_model(to_log, artifact_path="final_model")
         mlflow.end_run()
 
     if use_ddp:
         dist.destroy_process_group()
-    if tracker:
+    if tracker and local_rank == 0:
         tracker.stop()
 
 
