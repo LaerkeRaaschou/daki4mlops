@@ -17,20 +17,14 @@
 {{ model_description | default("", true) }}
 
 - **Developed by:** {{ developers | default("[More Information Needed]", true)}}
-- **Funded by [optional]:** {{ funded_by | default("[More Information Needed]", true)}}
-- **Shared by [optional]:** {{ shared_by | default("[More Information Needed]", true)}}
 - **Model type:** {{ model_type | default("[More Information Needed]", true)}}
 - **Language(s) (NLP):** {{ language | default("[More Information Needed]", true)}}
-- **License:** {{ license | default("[More Information Needed]", true)}}
-- **Finetuned from model [optional]:** {{ base_model | default("[More Information Needed]", true)}}
+- **Trained from architecture:** {{ base_arc | default("[More Information Needed]", true)}}
 
-### Model Sources [optional]
+### Model Sources
 
 <!-- Provide the basic links for the model. -->
-
 - **Repository:** {{ repo | default("[More Information Needed]", true)}}
-- **Paper [optional]:** {{ paper | default("[More Information Needed]", true)}}
-- **Demo [optional]:** {{ demo | default("[More Information Needed]", true)}}
 
 ## Uses
 
@@ -42,7 +36,7 @@
 
 {{ direct_use | default("[More Information Needed]", true)}}
 
-### Downstream Use [optional]
+### Downstream Use
 
 <!-- This section is for the model use when fine-tuned for a task, or when plugged into a larger ecosystem/app -->
 
@@ -68,9 +62,8 @@
 
 ## How to Get Started with the Model
 
-Use the code below to get started with the model.
-
 {{ get_started_code | default("[More Information Needed]", true)}}
+{{repo}}
 
 ## Training Details
 
@@ -84,7 +77,7 @@ Use the code below to get started with the model.
 
 <!-- This relates heavily to the Technical Specifications. Content here should link to that section when it is relevant to the training procedure. -->
 
-#### Preprocessing [optional]
+#### Preprocessing
 
 {{ preprocessing | default("[More Information Needed]", true)}}
 
@@ -93,7 +86,7 @@ Use the code below to get started with the model.
 
 - **Training regime:** {{ training_regime | default("[More Information Needed]", true)}} <!--fp32, fp16 mixed precision, bf16 mixed precision, bf16 non-mixed precision, fp16 non-mixed precision, fp8 mixed precision -->
 
-#### Speeds, Sizes, Times [optional]
+#### Speeds, Sizes, Times
 
 <!-- This section provides information about throughput, start/end time, checkpoint size if relevant, etc. -->
 
@@ -131,25 +124,16 @@ Use the code below to get started with the model.
 
 {{ results_summary | default("", true) }}
 
-## Model Examination [optional]
-
-<!-- Relevant interpretability work for the model goes here -->
-
-{{ model_examination | default("[More Information Needed]", true)}}
-
 ## Environmental Impact
 
 <!-- Total emissions (in grams of CO2eq) and additional considerations, such as electricity usage, go here. Edit the suggested text below accordingly -->
 
-Carbon emissions can be estimated using the [Machine Learning Impact calculator](https://mlco2.github.io/impact#compute) presented in [Lacoste et al. (2019)](https://arxiv.org/abs/1910.09700).
-
 - **Hardware Type:** {{ hardware_type | default("[More Information Needed]", true)}}
 - **Hours used:** {{ hours_used | default("[More Information Needed]", true)}}
 - **Cloud Provider:** {{ cloud_provider | default("[More Information Needed]", true)}}
-- **Compute Region:** {{ cloud_region | default("[More Information Needed]", true)}}
 - **Carbon Emitted:** {{ co2_emitted | default("[More Information Needed]", true)}}
 
-## Technical Specifications [optional]
+## Technical Specifications
 
 ### Model Architecture and Objective
 
@@ -167,7 +151,7 @@ Carbon emissions can be estimated using the [Machine Learning Impact calculator]
 
 {{ software | default("[More Information Needed]", true)}}
 
-## Citation [optional]
+## Citation
 
 <!-- If there is a paper or blog post introducing the model, the APA and Bibtex information for that should go in this section. -->
 
@@ -178,21 +162,3 @@ Carbon emissions can be estimated using the [Machine Learning Impact calculator]
 **APA:**
 
 {{ citation_apa | default("[More Information Needed]", true)}}
-
-## Glossary [optional]
-
-<!-- If relevant, include terms and calculations in this section that can help readers understand the model or model card. -->
-
-{{ glossary | default("[More Information Needed]", true)}}
-
-## More Information [optional]
-
-{{ more_information | default("[More Information Needed]", true)}}
-
-## Model Card Authors [optional]
-
-{{ model_card_authors | default("[More Information Needed]", true)}}
-
-## Model Card Contact
-
-{{ model_card_contact | default("[More Information Needed]", true)}}

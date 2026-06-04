@@ -1,142 +1,136 @@
-import sys
-import json
-import datetime
-from pathlib import Path
-
+from huggingface_hub import ModelCard, ModelCardData
 from omegaconf import OmegaConf
-from jinja2 import Template
-
-
-# Static facts (true for every training of this project)
-DATASET_CLASSES = 200
-DATASET_TRAIN_IMAGES = 100000  # 500 per class
-DATASET_VAL_IMAGES = 10000  # 50 per class
-
-# Preprocessing is fixed in train.py, so it is the same for every run
-PREPROCESSING = (
-    "Training augmentations: RandomResizedCrop(64, scale=(0.7, 1.0)), "
-    "RandomHorizontalFlip, ColorJitter(0.2, 0.2, 0.2, 0.1), ToTensor, "
-    "Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)). "
-    "Validation/test: Resize((64, 64)), Normalize with the same ImageNet "
-    "statistics."
-)
-
-# Is hardcoded so should be changed if the training and deployment infrastructure change
-COMPUTE_INFRASTRUCTURE = (
-    "Trained on the AAU AI-Lab cluster using a Singularity container (PyTorch 25.04)."
-)
-HARDWARE = "NVIDIA L4 GPU(s), Single- or multi-GPU via PyTorch DDP / DeepSpeed."
-SOFTWARE = "PyTorch, Hydra, OmegaConf, scikit-learn, Weights & Biases, MLflow."
-
-
-def load_metrics(metrics_path):
-    if metrics_path and Path(metrics_path).exists():
-        with open(metrics_path) as f:
-            return json.load(f)
-    return {}
-
-
-# Read and get all configurations used for the run
-def build_context(cfg, metrics):
-    # Run-specific values pulled from the config that trained this model
-    optimizer = OmegaConf.select(cfg, "optimizer._target_", default="unknown")
-    lr = OmegaConf.select(cfg, "optimizer.lr", default="unknown")
-    momentum = OmegaConf.select(cfg, "optimizer.momentum", default=None)
-    weight_decay = OmegaConf.select(cfg, "optimizer.weight_decay", default=None)
-    batch_size = OmegaConf.select(cfg, "data.batch_size", default="unknown")
-    val_split = OmegaConf.select(cfg, "data.val_split", default="unknown")
-    epochs = OmegaConf.select(cfg, "trainer.epochs", default="unknown")
-    seed = OmegaConf.select(cfg, "seed", default="unknown")
-    amp = OmegaConf.select(cfg, "amp.use", default=False)
-    scheduler_use = OmegaConf.select(cfg, "scheduler.use", default=False)
-
-    regime = "fp16 mixed precision (AMP via torch.amp)" if amp else "fp32"
-
-    # Config-driven hyperparameter block
-    hp_lines = [
-        f"- Optimizer: {optimizer}",
-        f"- Learning rate: {lr}",
-    ]
-    if momentum is not None:
-        hp_lines.append(f"- Momentum: {momentum}")
-    if weight_decay is not None:
-        hp_lines.append(f"- Weight decay: {weight_decay}")
-    hp_lines += [
-        f"- Batch size (per GPU): {batch_size}",
-        f"- Epochs: {epochs}",
-        f"- Validation split: {val_split}",
-        f"- LR scheduler used: {scheduler_use}",
-        f"- Random seed: {seed}",
-    ]
-    training_hyperparameters = "\n".join(hp_lines)
-
-    # Metrics come from evaluation, not the config
-    results_lines = [
-        f"- Validation accuracy: {metrics.get('val_acc', '[More Information Needed]')}",
-        f"- Validation precision (macro): {metrics.get('val_precision', '[More Information Needed]')}",
-        f"- Validation recall (macro): {metrics.get('val_recall', '[More Information Needed]')}",
-        f"- Test accuracy: {metrics.get('test_acc', '[More Information Needed]')}",
-    ]
-    results = "\n".join(results_lines)
-
-    return {
-        "card_data": "",
-        "direct_use": "Image classification on 64x64 RGB images belonging to the 200 Tiny ImageNet classes.",
-        "out_of_scope_use": "Not intended for production use or for images outside the Tiny ImageNet distribution.",
-        "preprocessing": PREPROCESSING,
-        "training_regime": regime,
-        "training_hyperparameters": training_hyperparameters,
-        "speeds_sizes_times": (
-            f"Trained for {epochs} epochs at per-GPU batch size {batch_size}. "
-            "Per-epoch time and peak VRAM are reported in the experiments section "
-            "(see D3 results)."
-        ),
-        "testing_factors": "Evaluation is reported overall and per class (200 classes).",
-        "testing_metrics": (
-            "Accuracy, macro-averaged precision and macro-averaged recall "
-            "(computed with scikit-learn, zero_division=0)."
-        ),
-        "results": results,
-        "results_summary": metrics.get("results_summary", ""),
-        "model_examination": "Per-class accuracy and confidence statistics are reported in test_statistics.",
-        "compute_infrastructure": COMPUTE_INFRASTRUCTURE,
-        "hardware_requirements": HARDWARE,
-        "software": SOFTWARE,
-    }
-
-
-def fill_dataset_facts(text):
-    # Replace the literal placeholders in the frontmatter / body text
-    replacements = {
-        "xx classes": f"{DATASET_CLASSES} classes",
-        "xxx images": f"{DATASET_TRAIN_IMAGES:,} images",
-        "For training the training set from the Tiny-imagenet-200 dataset is used. It contains XXXX.": f"For training, the training set from Tiny ImageNet-200 is used. It contains "
-        f"{DATASET_TRAIN_IMAGES:,} images across {DATASET_CLASSES} classes "
-        f"(500 per class), 64x64 RGB.",
-        "For testing the validation set from Tiny-imagenet-200 dataset is used, containing XXXX.": f"For testing, the validation set from Tiny ImageNet-200 is used, containing "
-        f"{DATASET_VAL_IMAGES:,} images ({DATASET_VAL_IMAGES // DATASET_CLASSES} per class).",
-    }
-    for old, new in replacements.items():
-        text = text.replace(old, new)
-    return text
 
 
 def main():
-    template_path = Path("modelcard_template.md")
-    config_path = sys.argv[2]  # e.g. outputs/2026-06-04/15-26-35/.hydra/config.yaml
-    metrics_path = sys.argv[3] if len(sys.argv) > 3 else None
-    out_path = "model_card.md"
-
+    config_path = "outputs/2026-06-04/09-20-38/.hydra/config.yaml"
     cfg = OmegaConf.load(config_path)
-    metrics = load_metrics(metrics_path)
-    context = build_context(cfg, metrics)
 
-    template = Template(Path(template_path).read_text())
-    rendered = template.render(**context)
-    rendered = fill_dataset_facts(rendered)
+    # Frontmatter metadata (the {{ card_data }} block at the top)
+    card_data = ModelCardData(
+        license="mit",
+        tags=["image-classification", "resnet", "tiny-imagenet"],
+        datasets=["tiny-imagenet-200"],
+    )
 
-    Path(out_path).write_text(rendered)
-    print(f"Model card written to {out_path} (generated {datetime.date.today()})")
+    card = ModelCard.from_template(
+        card_data,
+        template_path="model/modelcard_template.md",
+        # Model Details
+        model_id="ResNet-18",
+        model_summary=(
+            f"The goal of this model is classifying images. It is trained on "
+            f"{cfg.data.name}, which has {cfg.data.classes} classes with "
+            f"{cfg.data.train_img} images in the training set and "
+            f"{cfg.data.test_img} images in the test set."
+        ),
+        model_description=(
+            f"This model is a ResNet-18 convolutional neural network trained from "
+            f"scratch for image classification on the {cfg.data.name} dataset. It "
+            f"takes a 64x64 RGB image as input and predicts one of {cfg.data.classes} "
+            f"object classes. The model was developed as part of an MLOps course "
+            f"project at Aalborg University, with the primary goal of demonstrating "
+            f"an end-to-end machine-learning pipeline (training, evaluation, "
+            f"versioning, CI/CD, compression, and monitoring) rather than achieving "
+            f"state-of-the-art accuracy."
+        ),
+        developers="Anne, Lærke og Stoyan",
+        model_type="Image classifier",
+        language="Python",
+        base_arc="ResNet-18 (trained from scratch)",
+        # Model Sources
+        repo="https://github.com/LaerkeRaaschou/daki4mlops/README.md",
+        # Uses
+        direct_use=(
+            f"The model can be used directly for image classification: given a "
+            f"64x64 RGB image, it predicts one of the {cfg.data.classes} "
+            f"{cfg.data.name} classes. It is intended for educational and "
+            f"demonstration purposes within this MLOps project."
+        ),
+        downstream_use=(
+            "The trained network can serve as a basis for compression "
+            "experiments (quantization and pruning)."
+        ),
+        out_of_scope_use=(
+            "Not intended for production use or for images outside the "
+            "Tiny ImageNet distribution."
+        ),
+        # Bias, Risks, and Limitations
+        bias_risks_limitations=(
+            "Trained only on the Tiny ImageNet classes at 64x64 resolution; "
+            "performance is not guaranteed outside this distribution."
+        ),
+        bias_recommendations="",
+        # How to Get Started
+        get_started_code="Download the code in the repository and follow the README file.",
+        # Training Details
+        training_data=(
+            f"Trained on the {cfg.data.name} dataset, using "
+            f"{int(cfg.data.train_img * (1 - cfg.data.val_split))} training images "
+            f"and {int(cfg.data.train_img * cfg.data.val_split)} images for validation."
+            "Download data here: https://www.kaggle.com/competitions/tiny-imagenet/data."
+        ),
+        preprocessing=(
+            "The model have been trained on data using following data preprocessing and augmentation:"
+            "transforms.RandomResizedCrop(64, scale=(0.7, 1.0)), "
+            "transforms.RandomHorizontalFlip(), "
+            "transforms.ColorJitter(0.2, 0.2, 0.2, 0.1), "
+            "transforms.ToTensor(), "
+            "transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))"
+        ),
+        training_regime="fp16 mixed precision" if cfg.amp.use else "fp32",
+        speeds_sizes_times="",
+        # Evaluation
+        testing_data=(
+            f"The model is testet on the validation set from {cfg.data.name} as the original testset does not include labels."
+            f"This test set contains {cfg.data.test_img} images."
+        ),
+        testing_factors=(
+            "Evaluation is done per class."
+            "Results are reported overall and per individual class across all 200 Tiny ImageNet classes, "
+            "including identification of the best- and worst-performing classes."
+        ),
+        testing_metrics="Accuracy as the primary metric. Prediction confidence is also reported overall and per class.",
+        results="",
+        results_summary="",
+        # Environmental Impact
+        hardware_type="NVIDIA L4 GPU(s), single- or multi-GPU via PyTorch DDP / DeepSpeed.",
+        hours_used="",
+        cloud_provider="AI-Lab",
+        co2_emitted="",
+        # Technical Specifications
+        model_specs=(
+            f"The model is a ResNet-18 convolutional neural network, consisting of "
+            f"an initial 3x3 convolution and max-pooling stem followed by four stages "
+            f"of residual blocks (2 blocks each, with channel widths 64, 128, 256, 512), "
+            f"global average pooling, and a fully connected classification head. The "
+            f"architecture is adapted for Tiny ImageNet with {cfg.data.classes} output "
+            f"classes and 64x64 RGB input. Residual (skip) connections allow gradients "
+            f"to flow through the network, enabling stable training of the deeper stack. "
+            f"The training objective is multi-class image classification, optimized with "
+            f"{cfg.loss._target_}."
+        ),
+        compute_infrastructure="AI-Lab",
+        hardware_requirements="NVIDIA L4 GPU(s), single- or multi-GPU via PyTorch DDP / DeepSpeed.",
+        software="PyTorch, Hydra, OmegaConf, scikit-learn, Weights & Biases, MLflow.",
+        # Citation
+        citation_bibtex="""@inproceedings{he2016deep,
+  title     = {Deep Residual Learning for Image Recognition},
+  author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {770--778},
+  year      = {2016},
+  doi       = {https://doi.org/10.1109/CVPR.2016.90}
+}""",
+        citation_apa=(
+            "He, K., Zhang, X., Ren, S., & Sun, J. (2016). Deep Residual Learning "
+            "for Image Recognition. Proceedings of the IEEE Conference on Computer "
+            "Vision and Pattern Recognition (CVPR), 770-778."
+        ),
+    )
+
+    card.save("model_card.md")
+    print("Model card written to model_card.md")
 
 
 if __name__ == "__main__":

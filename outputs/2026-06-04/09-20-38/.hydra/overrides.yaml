@@ -1,0 +1,4 @@
+- earlystopping.use=false
+- optimizer=adamw
+- trainer.epochs=3
+- amp.use=true
