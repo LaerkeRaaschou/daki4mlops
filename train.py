@@ -188,6 +188,8 @@ def main(cfg):
         mlflow.set_experiment(os.environ["MLFLOW_EXPERIMENT_NAME"])
         mlflow.start_run()
 
+        mlflow.log_artifact("model/README.md")
+
         mlflow.log_params({
             "epochs": cfg.trainer.epochs,
             "batch_size": cfg.data.batch_size,
