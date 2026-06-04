@@ -1,0 +1,8 @@
+# DeepSpeed / ZeRO settings
+#   stage 0 = no ZeRO (plain DDP-style)
+#   stage 1 = shard optimizer states
+#   stage 2 = shard optimizer states + gradients
+#   stage 3 = shard optimizer states + gradients + parameters
+stage: 0
+fp16: false
+lr: 0.001
