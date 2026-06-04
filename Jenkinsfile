@@ -23,11 +23,6 @@ pipeline {
 
 
     stages {
-        stage('Fix Permissions') {
-            steps {
-                sh 'sudo chown -R $(whoami):$(whoami) $WORKSPACE || true'
-            }
-        }
 
         stage('Checkout') {
             steps {
@@ -216,4 +211,28 @@ pipeline {
             }
         }
     }
+        post {
+            always {
+                sh '''
+                    set +e
+                    echo "=== Fix workspace permissions before cleanup ==="
+                    chmod -R u+rwX "$WORKSPACE" 2>/dev/null || true
+
+                    echo "=== Remove DVC cache and generated folders ==="
+                    rm -rf "$WORKSPACE/.dvc/cache" 2>/dev/null || true
+                    rm -rf "$WORKSPACE/data" 2>/dev/null || true
+                    rm -rf "$WORKSPACE/artifacts_gr5" 2>/dev/null || true
+
+                    echo "=== Cleanup Docker containers/images ==="
+                    TAG=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)
+                    docker ps -aq --filter ancestor=${IMAGE_NAME}:${TAG} | xargs -r docker rm -f || true
+                    docker ps -aq --filter ancestor=${DOCKERHUB_REPO}:${TAG} | xargs -r docker rm -f || true
+                    docker rmi ${IMAGE_NAME}:${TAG} >/dev/null 2>&1 || true
+                    docker rmi ${DOCKERHUB_REPO}:${TAG} >/dev/null 2>&1 || true
+                    docker image prune -f >/dev/null 2>&1 || true
+                    docker builder prune -f >/dev/null 2>&1 || true
+                '''
+                cleanWs(deleteDirs: true, disableDeferredWipeout: true)
+            }
+        }
 }
