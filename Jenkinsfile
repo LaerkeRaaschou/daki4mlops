@@ -4,7 +4,7 @@ pipeline {
     options {
         skipDefaultCheckout(true)
     }
-    
+
     parameters {
         booleanParam(name: 'RUN_TRAINING', defaultValue: false, description: 'Run model training.')
         string(name: 'EPOCHS', defaultValue: '10', description: 'Number of epochs.')
@@ -47,6 +47,7 @@ pipeline {
                         sh '''
                             set -eux
                             docker run --rm \
+                                --user $(id -u):$(id -g) \
                                 -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
                                 -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
                                 -v "$WORKSPACE:/repo" \
