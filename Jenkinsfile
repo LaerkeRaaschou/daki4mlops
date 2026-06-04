@@ -1,7 +1,10 @@
 pipeline {
     agent any
 
-
+    options {
+        skipDefaultCheckout(true)
+    }
+    
     parameters {
         booleanParam(name: 'RUN_TRAINING', defaultValue: false, description: 'Run model training.')
         string(name: 'EPOCHS', defaultValue: '10', description: 'Number of epochs.')
@@ -20,13 +23,17 @@ pipeline {
 
 
     stages {
-        stage('Checkout') {
+        stage('Fix Permissions') {
             steps {
                 sh 'sudo chown -R $(whoami):$(whoami) $WORKSPACE || true'
-                checkout scm
             }
         }
 
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
         stage('Pull Dataset') {
             when {
