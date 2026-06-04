@@ -1,6 +1,9 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout(true)
+    }
 
     parameters {
         booleanParam(name: 'RUN_TRAINING', defaultValue: false, description: 'Run model training.')
@@ -20,10 +23,17 @@ pipeline {
 
 
     stages {
-        stage('Checkout') {
-            steps {checkout scm}
+        stage('Fix Permissions') {
+            steps {
+                sh 'sudo chown -R $(whoami):$(whoami) $WORKSPACE || true'
+            }
         }
 
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
         stage('Pull Dataset') {
             when {
@@ -37,6 +47,7 @@ pipeline {
                         sh '''
                             set -eux
                             docker run --rm \
+                                --user $(id -u):$(id -g) \
                                 -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
                                 -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
                                 -v "$WORKSPACE:/repo" \
@@ -132,9 +143,26 @@ pipeline {
                         -v "$WORKSPACE/artifacts_gr5:/app/artifacts" \
                         -v "$WORKSPACE/data:/app/data" \
                         "${IMAGE_NAME}:${TAG}" \
-                        python test.py \
-                            --model-path /app/artifacts/model.pth \
-                            --data-path /app/data/tiny-imagenet-200
+                        python test.py compile=false
+                '''
+            }
+        }
+
+        stage('Register Model in MLflow') {
+            when { 
+                expression { params.RUN_TRAINING } 
+                }
+            steps {
+                sh '''
+                    set -eux
+                    TAG=$(git rev-parse --short HEAD)
+
+                    docker run --rm \
+                    -e MLFLOW_TRACKING_URI="$MLFLOW_TRACKING_URI" \
+                    -e MLFLOW_EXPERIMENT_NAME="$MLFLOW_EXPERIMENT_NAME" \
+                    -v "$WORKSPACE/artifacts_gr5:/app/artifacts" \
+                    "${IMAGE_NAME}:${TAG}" \
+                    python register_model.py
                 '''
             }
         }
@@ -171,23 +199,19 @@ pipeline {
         }
 
 
-        stage('Test in container') {
-            steps {
-                sh '''
-                    set -eux
-                    TAG=$(git rev-parse --short HEAD)
-                    docker run --rm "${IMAGE_NAME}:${TAG}" python3 --version
-                '''
-            }
-        }
-
-
         stage('Deploy') {
             when { branch 'main' }
             steps {
                 sh '''
                 set -eux
                 TAG=$(git rev-parse --short HEAD)
+
+                docker run --rm \
+                -e MLFLOW_TRACKING_URI="$MLFLOW_TRACKING_URI" \
+                -e MLFLOW_EXPERIMENT_NAME="$MLFLOW_EXPERIMENT_NAME" \
+                -e GIT_COMMIT="$TAG" \
+                "${IMAGE_NAME}:${TAG}" \
+                python deploy_model.py
                 '''
             }
         }

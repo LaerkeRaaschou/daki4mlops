@@ -266,6 +266,8 @@ def main(cfg):
             cfg.earlystopping.verbose,
         )
 
+    training_finished = False
+
     for epoch in range(1, cfg.trainer.epochs + 1):
         if sampler is not None:
             sampler.set_epoch(epoch)
@@ -333,23 +335,23 @@ def main(cfg):
         if stop:
             if local_rank == 0:
                 print(f"Early stopping at epoch {epoch}")
+                os.makedirs("artifacts", exist_ok=True)
                 torch.save(
                     model.state_dict(),
-                    f"finished_model/resnet_18_classifier_epoch{epoch}.pt",
+                    f"artifacts/resnet_18_classifier_epoch{epoch}.pt",
                 )
-                mlflow.pytorch.log_model(
-                    model,
-                    artifact_path="final_model",
-                )
-
+                mlflow.pytorch.log_model(model, artifact_path="final_model")
                 mlflow.end_run()
-                
-                break
+                training_finished = True
+            break
 
-    if local_rank == 0:
+    if local_rank == 0 and not training_finished:
+        os.makedirs("artifacts", exist_ok=True)
         torch.save(
-            model.state_dict(), f"finished_model/resnet_18_classifier_epoch{epoch}.pt"
+            model.state_dict(), f"artifacts/resnet_18_classifier_epoch{epoch}.pt"
         )
+        mlflow.pytorch.log_model(model, artifact_path="final_model")
+        mlflow.end_run()
 
     if use_ddp:
         dist.destroy_process_group()
