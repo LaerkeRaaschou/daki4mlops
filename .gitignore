@@ -1,5 +1,6 @@
 data/tiny-imagenet-200
 model/trained_models
+model/pruned_models
 .DS_Store
 .venv
 .vscode
