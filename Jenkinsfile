@@ -21,7 +21,10 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            steps {checkout scm}
+            steps {
+                sh 'sudo chown -R $(whoami):$(whoami) $WORKSPACE || true'
+                checkout scm
+            }
         }
 
 
