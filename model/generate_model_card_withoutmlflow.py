@@ -1,78 +1,10 @@
-import os
-
-import mlflow
 from huggingface_hub import ModelCard, ModelCardData
-from mlflow.tracking import MlflowClient
 from omegaconf import OmegaConf
-
-MODEL_NAME = "resnet18-tinyimagenet"
-
-# Fallback used for any measured field that isn't in the run yet.
-MISSING = "[More Information Needed]"
-
-
-def get_registered_run():
-    """Resolve the most recent registered version of MODEL_NAME and return
-    (cfg, metrics, params, model_version, run_id) sourced from the run behind it.
-
-    Config comes from the config.yaml artifact that train.py logs into the run,
-    so the card no longer depends on a hardcoded outputs/<timestamp>/ path.
-    """
-    mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
-    client = MlflowClient()
-
-    versions = client.search_model_versions(f"name='{MODEL_NAME}'")
-    if not versions:
-        raise RuntimeError(f"No registered versions found for '{MODEL_NAME}'")
-    mv = max(versions, key=lambda v: int(v.version))
-
-    run = client.get_run(mv.run_id)
-    metrics = run.data.metrics  # last-epoch values: val_accuracy, val_precision, ...
-    params = run.data.params  # epochs, batch_size, device
-
-    # Config from the logged artifact (train.py logs it as "config.yaml").
-    cfg_local = client.download_artifacts(mv.run_id, "config.yaml")
-    cfg = OmegaConf.load(cfg_local)
-
-    return cfg, metrics, params, mv.version, mv.run_id
-
-
-def format_results(metrics):
-    """Build the Results prose from whatever metrics the run actually has.
-
-    val_accuracy/precision/recall are logged by val_model, so they're expected.
-    test_accuracy only appears once test.py logs into the run; absent -> omitted.
-    """
-    parts = []
-    if "val_accuracy" in metrics:
-        parts.append(f"Validation accuracy: {metrics['val_accuracy']:.2%}.")
-    if "val_precision" in metrics:
-        parts.append(f"Precision (macro): {metrics['val_precision']:.3f}.")
-    if "val_recall" in metrics:
-        parts.append(f"Recall (macro): {metrics['val_recall']:.3f}.")
-    if "test_accuracy" in metrics:
-        parts.append(f"Test accuracy: {metrics['test_accuracy']:.2%}.")
-
-    return " ".join(parts) if parts else MISSING
-
-
-def format_speeds(metrics):
-    """Speeds/Sizes/Times from epoch_time_s and peak_vram_mb if train.py logs
-    them to MLflow (Step C). Until then this falls back to MISSING."""
-    parts = []
-    if "epoch_time_s" in metrics:
-        parts.append(f"Approx. {metrics['epoch_time_s']:.1f} s per epoch.")
-    if "peak_vram_mb" in metrics:
-        parts.append(f"Peak VRAM: {metrics['peak_vram_mb']:.0f} MB.")
-
-    return " ".join(parts) if parts else MISSING
 
 
 def main():
-    cfg, metrics, params, model_version, run_id = get_registered_run()
-
-    epochs = params.get("epochs", MISSING)
-    batch_size = params.get("batch_size", MISSING)
+    config_path = "outputs/2026-06-04/09-20-38/.hydra/config.yaml"
+    cfg = OmegaConf.load(config_path)
 
     # Frontmatter metadata (the {{ card_data }} block at the top)
     card_data = ModelCardData(
@@ -147,7 +79,7 @@ def main():
             "transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))"
         ),
         training_regime="fp16 mixed precision" if cfg.amp.use else "fp32",
-        speeds_sizes_times=format_speeds(metrics),
+        speeds_sizes_times="",
         # Evaluation
         testing_data=(
             f"The model is testet on the validation set from {cfg.data.name} as the original testset does not include labels."
@@ -159,24 +91,13 @@ def main():
             "including identification of the best- and worst-performing classes."
         ),
         testing_metrics="Accuracy as the primary metric. Prediction confidence is also reported overall and per class.",
-        results=format_results(metrics),
-        results_summary=(
-            f"Model version {model_version}, trained for {epochs} epochs "
-            f"at batch size {batch_size}."
-        ),
+        results="",
+        results_summary="",
         # Environmental Impact
         hardware_type="NVIDIA L4 GPU(s), single- or multi-GPU via PyTorch DDP / DeepSpeed.",
-        hours_used=(
-            f"{metrics['training_hours']:.2f}"
-            if "training_hours" in metrics
-            else MISSING
-        ),
+        hours_used="",
         cloud_provider="AI-Lab",
-        co2_emitted=(
-            f"{metrics['co2_kg'] * 1000:.1f} g CO2eq"
-            if "co2_kg" in metrics
-            else MISSING
-        ),
+        co2_emitted="",
         # Technical Specifications
         model_specs=(
             f"The model is a ResNet-18 convolutional neural network, consisting of "
@@ -210,10 +131,6 @@ def main():
 
     card.save("model_card.md")
     print("Model card written to model_card.md")
-
-    # Log the finished card back into the same run as the weights/config.
-    with mlflow.start_run(run_id=run_id):
-        mlflow.log_artifact("model_card.md")
 
 
 if __name__ == "__main__":
