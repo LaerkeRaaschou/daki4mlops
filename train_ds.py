@@ -10,6 +10,10 @@ from carbontracker.tracker import CarbonTracker
 from model.resnet18 import ResNet18
 from data.dataloader import get_dataset, get_loaders
 
+import deepspeed.utils.nvtx as _nvtx
+
+_nvtx.instrument_w_nvtx = lambda func: func
+
 
 # DeepSpeed launcher sets these env vars
 def get_dist_info():
@@ -169,7 +173,7 @@ def main(cfg):
     print(f"Rank {rank} num_batches = {len(train_loader)}")
 
     for epoch in range(1, cfg.trainer.epochs + 1):
-        if cfg.carbontracker:
+        if cfg.carbontracker and local_rank == 0:
             tracker.epoch_start()
 
         torch.cuda.reset_peak_memory_stats()
@@ -199,10 +203,10 @@ def main(cfg):
                 f"Val Accuracy = {val_acc:.3f}."
             )
 
-        if cfg.carbontracker:
+        if cfg.carbontracker and local_rank == 0:
             tracker.epoch_end()
 
-    if cfg.carbontracker:
+    if cfg.carbontracker and local_rank == 0:
         tracker.stop()
 
     if dist.is_initialized():
