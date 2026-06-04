@@ -9,7 +9,6 @@ from data.dataloader import get_test_loader
 
 def initialize_model(num_classes, weights_path):
     model = ResNet18(num_classes)
-    model = torch.compile(model, backend="eager")
     weights = torch.load(weights_path, map_location=torch.device("cpu"))
     model.load_state_dict(weights)
     return model

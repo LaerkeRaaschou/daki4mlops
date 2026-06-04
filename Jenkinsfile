@@ -215,10 +215,10 @@ pipeline {
                 sh '''
                     set +e
                     echo "=== Fix workspace permissions before cleanup ==="
-                    chmod -R u+rwX "$WORKSPACE" 2>/dev/null || true
+                    chmod -R 777 "$WORKSPACE" 2>/dev/null || true
 
                     echo "=== Remove DVC cache and generated folders ==="
-                    rm -rf "$WORKSPACE/.dvc/cache" 2>/dev/null || true
+                    rm -rf "$WORKSPACE/.dvc" 2>/dev/null || true
                     rm -rf "$WORKSPACE/data" 2>/dev/null || true
                     rm -rf "$WORKSPACE/artifacts_gr5" 2>/dev/null || true
 
