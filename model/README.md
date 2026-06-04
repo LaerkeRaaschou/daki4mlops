@@ -1,8 +1,8 @@
 ---
 {{ card_data }}
 model_id: RESNET-18
-model_summary: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images.
-model_description: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images. With some more information.
+model_summary: The goal of this model is classifing images. It is trained on Tiny-imagenet which has 200 classes with xxx images.
+model_description: The goal of this model is classifing images. It is trained on Tiny-imagenet which has 200 classes with xxx images. With some more information.
 developers: Anne, Lærke og Stoyan
 model_type: Image classifier
 base_arch: RESNET-18
@@ -19,13 +19,13 @@ model_specs: The base architecture is the RESNET-18 xxxxx
 
 
 # Model Card for RESNET-18 <!-- model_id -->
-Model summary: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images. <!-- model_summary -->
+Model summary: The goal of this model is classifing images. It is trained on Tiny-imagenet which has 200 classes with xxx images. <!-- model_summary -->
 
 ## Model Details
 
 ### Model Description
 
-Model description: The goal of this model is classifing images. It is trained on Tiny-imagenet which has xx classes with xxx images. With some more information. <!-- model_description -->
+Model description: The goal of this model is classifing images. It is trained on Tiny-imagenet which has 200 classes with xxx images. With some more information. <!-- model_description -->
 
 - **Developed by: Anne, Lærke og Stoyan** <!-- developers -->
 - **Model type: Image Classifier** <!-- model_type -->

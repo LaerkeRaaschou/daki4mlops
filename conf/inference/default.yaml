@@ -1,9 +1,9 @@
-weights_path: model/trained_models/resnet_18_classifier_best_acc_epoch49.pt
+weights_path: /app/artifacts/final_model.pt
 num_classes: 200
-data_path: data/tiny-imagenet-200/val/images
-class_labels_path: data/tiny-imagenet-200/words.txt
-output_path: predictions.csv
-annotations: "data/tiny-imagenet-200/val/val_annotations.txt"
+data_path: /app/data/tiny-imagenet-200/val/images
+class_labels_path: /app/data/tiny-imagenet-200/words.txt
+output_path: /app/predictions.csv
+annotations: "/app/data/tiny-imagenet-200/val/val_annotations.txt"
 batch_size: 1
-save_stats_path: "test_statistics.txt"
-mapping_path: "data/mapping_path.json"
+save_stats_path: "/app/artifacts/test_statistics.txt"
+mapping_path: "/app/data/mapping_path.json"

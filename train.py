@@ -188,6 +188,8 @@ def main(cfg):
         mlflow.set_experiment(os.environ["MLFLOW_EXPERIMENT_NAME"])
         mlflow.start_run()
 
+        mlflow.log_artifact("model/README.md")
+
         mlflow.log_params(
             {
                 "epochs": cfg.trainer.epochs,
@@ -339,7 +341,7 @@ def main(cfg):
                 os.makedirs("artifacts", exist_ok=True)
                 torch.save(
                     model.state_dict(),
-                    f"artifacts/resnet_18_classifier_epoch{epoch}.pt",
+                    "artifacts/final_model.pt",
                 )
                 mlflow.pytorch.log_model(model, artifact_path="final_model")
                 mlflow.end_run()
@@ -348,9 +350,7 @@ def main(cfg):
 
     if local_rank == 0 and not training_finished:
         os.makedirs("artifacts", exist_ok=True)
-        torch.save(
-            model.state_dict(), f"artifacts/resnet_18_classifier_epoch{epoch}.pt"
-        )
+        torch.save(model.state_dict(), "artifacts/final_model.pt")
         mlflow.pytorch.log_model(model, artifact_path="final_model")
         mlflow.end_run()
 

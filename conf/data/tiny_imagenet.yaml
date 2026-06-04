@@ -1,3 +1,4 @@
+name: tiny_imagenet
 root: data/tiny-imagenet-200
 mapping_path: data/mapping_path.json
 
