@@ -13,7 +13,11 @@ pipeline {
 
     parameters {
         booleanParam(name: 'RUN_TRAINING', defaultValue: false, description: 'Run model training.')
-        string(name: 'EPOCHS', defaultValue: '10', description: 'Number of epochs.')
+        string(name: 'EPOCHS', defaultValue: '50', description: 'Number of epochs.')
+        string(name: 'OPTIMIZER', defaultValue: 'adamw', description: 'Optimizer to use for training.')
+        string(name: 'LEARNING_RATE', defaultValue: '0.001', description: 'Learning rate for training.')
+        string(name: 'WEIGHT_DECAY', defaultValue: '0.01', description: 'Weight decay for training.')
+        string(name: 'BATCH_SIZE', defaultValue: '64', description: 'Batch size for training.')
     }
 
 
@@ -126,7 +130,14 @@ pipeline {
                             -v "$WORKSPACE/data:/app/data" \
                             -v "$WORKSPACE/artifacts_gr5:/app/artifacts" \
                             "${IMAGE_NAME}:${TAG}" \
-                            python train.py trainer.epochs="${EPOCHS}" compile=false
+                            python train.py \
+                                trainer.epochs="${EPOCHS}" \
+                                optimizer="${OPTIMIZER}" \
+                                optimizer.lr="${LEARNING_RATE}" \
+                                data.batch_size="${BATCH_SIZE}" \
+                                optimizer.weight_decay="${WEIGHT_DECAY}" \
+                                compile=false
+
                     '''
                 }
             }

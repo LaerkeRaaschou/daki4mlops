@@ -1,0 +1,10 @@
+wandb: Currently logged in as: laerkeraaschou (laerkeraaschou-aalborg-universitet) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run b8mv46sl
+wandb: Tracking run with wandb version 0.22.2
+wandb: Run data is saved locally in /ceph/project/daki_mlops_p4g5/wandb/run-20260604_092040-b8mv46sl
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run golden-galaxy-124
+wandb: ⭐️ View project at https://wandb.ai/laerkeraaschou-aalborg-universitet/tiny-imagenet-resnet18
+wandb: 🚀 View run at https://wandb.ai/laerkeraaschou-aalborg-universitet/tiny-imagenet-resnet18/runs/b8mv46sl
+/ceph/home/student.aau.dk/yt84fi/.local/lib/python3.12/site-packages/hydra/_internal/instantiate/_instantiate2.py:92: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  return _target_(*args, **kwargs)

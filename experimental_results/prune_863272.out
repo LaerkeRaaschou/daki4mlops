@@ -1,0 +1,22 @@
+Sparsity: 0%, Accuracy: 54.28%
+Sparsity: 10%, Accuracy: 54.16%
+Sparsity: 20%, Accuracy: 52.74%
+Sparsity: 30%, Accuracy: 52.06%
+Sparsity: 40%, Accuracy: 42.80%
+Sparsity: 50%, Accuracy: 22.07%
+Sparsity: 60%, Accuracy: 4.22%
+Sparsity: 70%, Accuracy: 1.17%
+Sparsity: 80%, Accuracy: 0.61%
+Sparsity: 90%, Accuracy: 0.50%
+
+Pruning plot saved to 'pruning_accuracy.png'
+
+Pruned to 80%. Accuracy before fine-tuning = 0.61%
+Epoch 1. Train Loss = 2.9731. Test Accuracy = 38.64%
+Epoch 2. Train Loss = 2.4578. Test Accuracy = 41.31%
+Epoch 3. Train Loss = 2.3150. Test Accuracy = 41.78%
+Epoch 4. Train Loss = 2.2319. Test Accuracy = 42.97%
+Epoch 5. Train Loss = 2.1781. Test Accuracy = 43.31%
+Pruned to 80%. Accuracy after fine-tuning = 43.31%
+Recovered accuracy = 42.70%
+Fine-tuned pruned model saved to 'finished_model/pruned_models/resnet_18_pruned_finetuned.pt'
