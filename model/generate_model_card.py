@@ -210,12 +210,13 @@ def main():
         ),
     )
 
-    card.save("model_card.md")
-    print("Model card written to model_card.md")
+    card.save("/app/model_card.md")
+    print("Model card written to /app/model_card.md")
 
     # Log the finished card back into the same run as the weights/config.
-    with mlflow.start_run(run_id=run_id):
-        mlflow.log_artifact("model_card.md")
+    client = MlflowClient()
+    client.log_artifact(run_id, "/app/model_card.md")
+    print(f"Model card logged to MLflow run {run_id}")
 
 
 if __name__ == "__main__":
