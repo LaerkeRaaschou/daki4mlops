@@ -102,7 +102,17 @@ pipeline {
                     set -eux
                     TAG=$(git rev-parse --short HEAD)
                     docker run --rm "${IMAGE_NAME}:${TAG}" \
-                        python3 -m pytest unit_tests -v --cov=.
+                    python3 -m pytest unit_tests -v \
+                        --cov=train \
+                        --cov=test \
+                        --cov=inference \
+                        --cov=drift_detection \
+                        --cov=runtime_metrics \
+                        --cov=monitoring_api \
+                        --cov=publish_monitoring_metrics \
+                        --cov=data \
+                        --cov=model \
+                        --cov-report=term
                 '''
             }
         }
