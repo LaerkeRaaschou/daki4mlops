@@ -1,25 +1,40 @@
-import torch
-import torch.quantization
-import torch.nn
-import os
 import datetime
-from model.resnet18 import ResNet18
+import os
+import sys
+from pathlib import Path
+
+import torch
+import torch.nn
+import torch.quantization
 from torchvision import transforms
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from data.dataloader import get_test_loader
+from model.resnet18 import ResNet18
 from test import report_statistics, test_model
 
-torch.backends.quantized.engine = "qnnpack"
+
+def get_quantized_engine():
+    for engine in ["qnnpack", "fbgemm", "onednn", "x86"]:
+        if engine in torch.backends.quantized.supported_engines:
+            return engine
+    raise RuntimeError(
+        f"No supported quantized backend found: "
+        f"{torch.backends.quantized.supported_engines}"
+    )
 
 
 def quantize_model(full_model, quantized_model):
-    torch.backends.quantized.engine = "qnnpack"
+    torch.backends.quantized.engine = get_quantized_engine()
     model = ResNet18(num_classes=200)
     model = torch.compile(model, backend="eager")
     model.load_state_dict(torch.load(full_model, map_location=torch.device("cpu")))
     model = model._orig_mod
     model.eval()
-    model.qconfig = torch.quantization.get_default_qconfig("qnnpack")
+    model.qconfig = torch.quantization.get_default_qconfig(torch.backends.quantized.engine)
     model_prepared = torch.quantization.prepare(model, inplace=False)
     with torch.no_grad():
         for _ in range(10):
@@ -31,10 +46,10 @@ def quantize_model(full_model, quantized_model):
 
 
 def load_quantized_model(quantized_model_path):
-    torch.backends.quantized.engine = "qnnpack"
+    torch.backends.quantized.engine = get_quantized_engine()
     model = ResNet18(num_classes=200)
     model.eval()
-    model.qconfig = torch.quantization.get_default_qconfig("qnnpack")
+    model.qconfig = torch.quantization.get_default_qconfig(torch.backends.quantized.engine)
     torch.quantization.prepare(model, inplace=True)
     torch.quantization.convert(model, inplace=True)
     model.load_state_dict(
