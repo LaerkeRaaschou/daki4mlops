@@ -93,7 +93,7 @@ pipeline {
                     set -eux
                     TAG=$(git rev-parse --short HEAD)
                     docker run --rm "${IMAGE_NAME}:${TAG}" \
-                        python3 -m pytest unit_tests -v
+                        python3 -m pytest unit_tests -v --cov=.
                 '''
             }
         }
