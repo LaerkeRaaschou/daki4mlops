@@ -1,5 +1,5 @@
 import os
-
+import yaml
 import mlflow
 from huggingface_hub import ModelCard, ModelCardData
 from mlflow.tracking import MlflowClient
@@ -32,7 +32,9 @@ def get_registered_run():
 
     # Config from the logged artifact (train.py logs it as "config.yaml").
     cfg_local = client.download_artifacts(mv.run_id, "config.yaml")
-    cfg = OmegaConf.load(cfg_local)
+    with open(cfg_local) as f:
+        cfg_dict = yaml.safe_load(f)
+    cfg = OmegaConf.create(cfg_dict)
 
     return cfg, metrics, params, mv.version, mv.run_id
 
