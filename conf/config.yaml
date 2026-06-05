@@ -1,6 +1,6 @@
 defaults:
   - data: tiny_imagenet
-  - optimizer: adam
+  - optimizer: adamw
   - trainer: default
   - scheduler: steplr
   - loss: ce
