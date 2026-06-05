@@ -1,7 +1,12 @@
 import csv
 import os
+import sys
 import time
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import hydra
 import matplotlib
@@ -135,9 +140,9 @@ def print_summary(rows):
 
 
 # Batch inference benchmark entrypoint
-@hydra.main(config_path="conf", config_name="config", version_base=None)
+@hydra.main(config_path="../conf", config_name="config", version_base=None)
 def main(cfg):
-    from quantization import load_quantized_model
+    from experiments.quantization import load_quantized_model
 
     if cfg.device == "cuda":
         print("Using CPU for quantized PyTorch batch benchmark.")
