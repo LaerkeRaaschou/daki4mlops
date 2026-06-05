@@ -1,6 +1,17 @@
 # MLOps project by Anne, Lærke and Stoyan
+This repository contains the code that form our MLOps implementations.
 
 # The code consist of:
+
+
+## The code is structured into multiple folders:
+- **conf:** contains hydra-configurations files.
+- **data:** contains all code used for the test of the different architectures and loading of the different datasets.
+- **experiments:** contains all code used in generating the synthetic dataset, together with the code for the initial evaluation of the dataset: model architecture, training and validation script.
+- **model:** contains all code used for the test of the different architectures and loading of the different datasets.
+- **monitoring:** contains all code used in generating the synthetic dataset, together with the code for the initial evaluation of the dataset: model architecture, training and validation script.
+- **outputs:** contains all code used for the test of the different architectures and loading of the different datasets.
+- **unitests:** contains all code used in generating the synthetic dataset, together with the code for the initial evaluation of the dataset: model architecture, training and validation script.
 
 
 # To create virtual environment for development do:
