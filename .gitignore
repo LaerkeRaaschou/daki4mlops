@@ -7,11 +7,10 @@ model/pruned_models
 wandb
 data/__pycache__
 model/__pycache__
-
-inference/build/
-inference/images/
-
 .python-version
 __pycache__
 .pytest_cache
 .coverage
+mlflow.db
+mlruns
+outputs

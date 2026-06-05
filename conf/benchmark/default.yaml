@@ -1,0 +1,9 @@
+batch_sizes:
+  - 1
+  - 2
+  - 4
+  - 8
+  - 16
+  - 32
+output_csv: results/batch_inference_benchmark.csv
+output_plot: results/batch_inference_benchmark.png

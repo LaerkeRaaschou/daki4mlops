@@ -1,0 +1,7 @@
+enabled: true
+reference_path: ${inference.data_path}
+current_path: ${inference.data_path}
+sample_limit: 500
+seed: ${seed}
+output_dir: results/drift
+fail_on_drift: false
