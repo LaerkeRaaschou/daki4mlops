@@ -5,11 +5,11 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT))
 
 import hydra
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import torch
@@ -78,9 +78,7 @@ def benchmark_one_batch_size(cfg, model, batch_size):
     latency_ms_per_image = (
         (total_time_s / processed_samples) * 1000 if processed_samples else 0.0
     )
-    throughput_images_per_s = (
-        processed_samples / total_time_s if total_time_s else 0.0
-    )
+    throughput_images_per_s = processed_samples / total_time_s if total_time_s else 0.0
 
     return {
         "batch_size": batch_size,
@@ -134,9 +132,13 @@ def write_plot(rows, output_path):
 def print_summary(rows):
     best = max(rows, key=lambda row: row["throughput_images_per_s"])
     print("Batch inference benchmark complete.")
-    print(f"Best throughput: batch_size={best['batch_size']} "
-          f"({best['throughput_images_per_s']:.2f} images/s)")
-    print("Use the CSV/plot to identify the saturation point and discuss latency tradeoffs.")
+    print(
+        f"Best throughput: batch_size={best['batch_size']} "
+        f"({best['throughput_images_per_s']:.2f} images/s)"
+    )
+    print(
+        "Use the CSV/plot to identify the saturation point and discuss latency tradeoffs."
+    )
 
 
 # Batch inference benchmark entrypoint

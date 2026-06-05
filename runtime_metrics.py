@@ -18,9 +18,7 @@ def build_inference_metrics(
     low_confidence_count = sum(
         confidence < low_confidence_threshold for confidence in confidences
     )
-    low_confidence_share = (
-        low_confidence_count / image_count if image_count else 0.0
-    )
+    low_confidence_share = low_confidence_count / image_count if image_count else 0.0
 
     return {
         "event_type": "inference_batch_summary",

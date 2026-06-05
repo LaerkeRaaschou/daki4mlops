@@ -3,7 +3,7 @@ pipeline {
 
     options {
         skipDefaultCheckout(true)
-        
+
     }
 
     triggers{
@@ -161,8 +161,8 @@ pipeline {
         }
 
         stage('Register Model in MLflow') {
-                    when { 
-                        expression { params.RUN_TRAINING } 
+                    when {
+                        expression { params.RUN_TRAINING }
                         }
                     steps {
                         sh '''
