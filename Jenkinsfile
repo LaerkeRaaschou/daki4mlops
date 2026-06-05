@@ -229,19 +229,58 @@ pipeline {
         }
 
 
-        stage('Deploy') {
-            when { branch 'main' }
+        stage('Deployment Pipeline') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { params.RUN_TRAINING }
+                }
+            }
             steps {
                 sh '''
                 set -eux
                 TAG=$(git rev-parse --short HEAD)
+                API_CONTAINER="daki-monitoring-api-${TAG}"
+                NETWORK="daki-deployment-net-${TAG}"
+
+                cleanup_deployment() {
+                    docker rm -f "$API_CONTAINER" >/dev/null 2>&1 || true
+                    docker network rm "$NETWORK" >/dev/null 2>&1 || true
+                }
+                trap cleanup_deployment EXIT
+
+                cleanup_deployment
+                docker network create "$NETWORK"
+
+                docker run -d \
+                    --name "$API_CONTAINER" \
+                    --network "$NETWORK" \
+                    --network-alias monitoring-api \
+                    "${IMAGE_NAME}:${TAG}" \
+                    uvicorn monitoring_api:app --host 0.0.0.0 --port 8000
+
+                sleep 5
+
+                mkdir -p "$WORKSPACE/results"
 
                 docker run --rm \
-                -e MLFLOW_TRACKING_URI="$MLFLOW_TRACKING_URI" \
-                -e MLFLOW_EXPERIMENT_NAME="$MLFLOW_EXPERIMENT_NAME" \
-                -e GIT_COMMIT="$TAG" \
-                "${IMAGE_NAME}:${TAG}" \
-                python deploy_model.py
+                    --network "$NETWORK" \
+                    -e MLFLOW_TRACKING_URI="$MLFLOW_TRACKING_URI" \
+                    -e MLFLOW_EXPERIMENT_NAME="$MLFLOW_EXPERIMENT_NAME" \
+                    -e GIT_COMMIT="$TAG" \
+                    -v "$WORKSPACE/data:/app/data" \
+                    -v "$WORKSPACE/artifacts_gr5:/app/artifacts" \
+                    -v "$WORKSPACE/results:/app/results" \
+                    "${IMAGE_NAME}:${TAG}" \
+                    sh -c '
+                        python inference.py --metrics-log-path /app/results/runtime_metrics.jsonl &&
+                        python drift_detection.py &&
+                        python publish_monitoring_metrics.py \
+                            --monitoring-url http://monitoring-api:8000 \
+                            --runtime-metrics-path /app/results/runtime_metrics.jsonl \
+                            --drift-summary-path results/drift/drift_summary.json &&
+                        python deploy_model.py
+                    '
                 '''
             }
         }
