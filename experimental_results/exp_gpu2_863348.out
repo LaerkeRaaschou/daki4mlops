@@ -1,0 +1,63 @@
+CarbonTracker: WARNING - No API keys provided. Skipping intensity provider initialization.
+CarbonTracker: WARNING - No API keys provided. Skipping intensity provider initialization.
+CarbonTracker: The following components were found: GPU with device(s) NVIDIA L4, NVIDIA L4.
+CarbonTracker: The following components were found: GPU with device(s) NVIDIA L4, NVIDIA L4.
+[2026-06-04 09:28:51,673][geocoder.base][INFO] - Requested http://ipinfo.io/json
+[2026-06-04 09:28:51,695][geocoder.base][INFO] - Requested http://ipinfo.io/json
+CarbonTracker: WARNING - No carbon intensity provider specified. Using average carbon intensity for DK: 143.30 gCO2eq/kWh.
+CarbonTracker: WARNING - No carbon intensity provider specified. Using average carbon intensity for DK: 143.30 gCO2eq/kWh.
+Rank 0 num_batches = 352Rank 1 num_batches = 352
+
+Train Epoch: 1, Iteration: 0, Train Loss: 5.409518241882324
+Train Epoch: 1, Iteration: 200, Train Loss: 4.7510504722595215
+Epoch 1 train time: 400.15 s
+Peak VRAM: 10474.3 MB
+Current LR: 0.001
+Epoch 1. Train Loss = 4.8130. Val Loss = 4.9343. Val Accuracy = 0.050. Val Precision = 0.057.Val Recall = 0.052.
+CarbonTracker:
+Predicted consumption for 3 epoch(s):
+	Time:	0:35:36
+	Energy:	0.050870240199 kWh
+	CO2eq:	7.289726786064 g
+	This is equivalent to:
+	0.068255868783 km travelled by car
+CarbonTracker:
+Predicted consumption for 3 epoch(s):
+	Time:	0:35:36
+	Energy:	0.050869432443 kWh
+	CO2eq:	7.289611034231 g
+	This is equivalent to:
+	0.068254784965 km travelled by car
+Train Epoch: 2, Iteration: 0, Train Loss: 4.480737209320068
+Train Epoch: 2, Iteration: 200, Train Loss: 4.484584331512451
+Epoch 2 train time: 387.51 s
+Peak VRAM: 10473.3 MB
+Current LR: 0.001
+Epoch 2. Train Loss = 4.3666. Val Loss = 4.4456. Val Accuracy = 0.093. Val Precision = 0.112.Val Recall = 0.094.
+Train Epoch: 3, Iteration: 0, Train Loss: 4.175585746765137
+Train Epoch: 3, Iteration: 200, Train Loss: 4.260270118713379
+Epoch 3 train time: 390.23 s
+Peak VRAM: 10473.8 MB
+Current LR: 0.001
+Epoch 3. Train Loss = 4.1412. Val Loss = 4.1072. Val Accuracy = 0.163. Val Precision = 0.195.Val Recall = 0.161.
+CarbonTracker: Average carbon intensity during training was 143.30 gCO2eq/kWh.
+CarbonTracker: Average carbon intensity during training was 143.30 gCO2eq/kWh.
+CarbonTracker:
+Actual consumption for 3 epoch(s):
+	Time:	0:26:38
+	Energy:	0.043778080805 kWh
+	CO2eq:	6.273417366082 g
+	This is equivalent to:
+	0.058739862978 km travelled by car
+CarbonTracker: Finished monitoring.
+CarbonTracker:
+Actual consumption for 3 epoch(s):
+	Time:	0:26:38
+	Energy:	0.043779566387 kWh
+	CO2eq:	6.273630250637 g
+	This is equivalent to:
+	0.058741856279 km travelled by car
+CarbonTracker: Finished monitoring.
+[1;34mwandb[0m:
+[1;34mwandb[0m: 🚀 View run [33miconic-frog-126[0m at: [34m[0m
+[1;34mwandb[0m: Find logs at: [1;35mwandb/run-20260604_092855-iiiraj3n/logs[0m

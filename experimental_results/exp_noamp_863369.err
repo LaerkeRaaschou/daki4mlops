@@ -1,0 +1,8 @@
+wandb: Currently logged in as: laerkeraaschou (laerkeraaschou-aalborg-universitet) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run 279yo3dd
+wandb: Tracking run with wandb version 0.22.2
+wandb: Run data is saved locally in /ceph/project/daki_mlops_p4g5/wandb/run-20260604_100053-279yo3dd
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run generous-lion-127
+wandb: ⭐️ View project at https://wandb.ai/laerkeraaschou-aalborg-universitet/tiny-imagenet-resnet18
+wandb: 🚀 View run at https://wandb.ai/laerkeraaschou-aalborg-universitet/tiny-imagenet-resnet18/runs/279yo3dd
