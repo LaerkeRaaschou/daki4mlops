@@ -4,6 +4,6 @@ data_path: /app/data/tiny-imagenet-200/val/images
 class_labels_path: /app/data/tiny-imagenet-200/words.txt
 output_path: /app/predictions.csv
 annotations: "/app/data/tiny-imagenet-200/val/val_annotations.txt"
-batch_size: 1
+batch_size: 32
 save_stats_path: "/app/artifacts/test_statistics.txt"
 mapping_path: "/app/data/mapping_path.json"

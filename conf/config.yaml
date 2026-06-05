@@ -7,6 +7,8 @@ defaults:
   - earlystopping: default
   - amp: default
   - inference: default
+  - benchmark: default
+  - drift: default
   - deepspeed: default
   - _self_
 
