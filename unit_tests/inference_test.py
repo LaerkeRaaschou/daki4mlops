@@ -1,4 +1,5 @@
 import json
+from types import SimpleNamespace
 
 import pytest
 from PIL import Image
@@ -83,26 +84,6 @@ def test_format_prediction_maps_label():
     assert prediction["confidence"] == 0.75
 
 
-def test_load_model_uses_quantized_loader(monkeypatch):
-    calls = []
-
-    def fake_load_quantized_model(num_classes, weights_path):
-        calls.append((num_classes, weights_path))
-        return "quantized-model"
-
-    monkeypatch.setattr(inference, "load_quantized_model", fake_load_quantized_model)
-
-    model = inference.load_model(
-        num_classes=200,
-        weights_path="model.pt",
-        device="cpu",
-        quantized=True,
-    )
-
-    assert model == "quantized-model"
-    assert calls == [(200, "model.pt")]
-
-
 def test_parse_args_exposes_optional_runtime_metrics(monkeypatch):
     monkeypatch.setattr(
         "sys.argv",
@@ -120,3 +101,27 @@ def test_parse_args_exposes_optional_runtime_metrics(monkeypatch):
     assert args.metrics_log_path == "runtime/inference.jsonl"
     assert args.low_confidence_threshold == 0.5
     assert args.signal_threshold == 0.5
+
+
+def test_parse_args_defaults_to_hydra_inference_config():
+    cfg = SimpleNamespace(
+        device="cuda",
+        inference=SimpleNamespace(
+            data_path="/configured/images",
+            weights_path="/configured/model.pt",
+            mapping_path="/configured/mapping.json",
+            class_labels_path="/configured/words.txt",
+            num_classes=200,
+            batch_size=64,
+        ),
+    )
+
+    args = inference.parse_args([], cfg=cfg)
+
+    assert args.input == "/configured/images"
+    assert args.weights_path == "/configured/model.pt"
+    assert args.mapping_path == "/configured/mapping.json"
+    assert args.class_labels_path == "/configured/words.txt"
+    assert args.num_classes == 200
+    assert args.batch_size == 64
+    assert args.device == "cuda"

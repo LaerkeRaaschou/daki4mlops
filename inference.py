@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 
 import torch
+from hydra import compose, initialize
+from omegaconf import OmegaConf
 from PIL import Image, UnidentifiedImageError
 from torchvision import transforms
 
@@ -11,19 +13,7 @@ from runtime_metrics import append_jsonl, build_inference_metrics
 from model.resnet18 import ResNet18
 
 
-DEFAULT_WEIGHTS_PATH = "/app/artifacts/final_model.pt"
-DEFAULT_MAPPING_PATH = "/app/data/mapping_path.json"
-DEFAULT_CLASS_LABELS_PATH = "/app/data/tiny-imagenet-200/words.txt"
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
-
-
-# Get the first supported backend for quantized PyTorch inference
-def get_quantized_engine():
-    supported = torch.backends.quantized.supported_engines
-    for engine in ["qnnpack", "fbgemm", "onednn"]:
-        if engine in supported:
-            return engine
-    raise RuntimeError(f"No supported quantized backend found. Supported: {supported}")
 
 
 # Load a regular model from saved weights
@@ -46,25 +36,6 @@ def initialize_model(num_classes, weights_path, device):
     model.load_state_dict(weights)
     model.eval()
     model.to(device)
-    return model
-
-
-# Load the compressed model for CPU quantized inference
-def load_quantized_model(num_classes, quantized_model_path):
-    if not os.path.isfile(quantized_model_path):
-        raise FileNotFoundError(f"Model weights file not found: {quantized_model_path}")
-
-    quantized_engine = get_quantized_engine()
-    torch.backends.quantized.engine = quantized_engine
-
-    model = ResNet18(num_classes=num_classes)
-    model.eval()
-    model.qconfig = torch.quantization.get_default_qconfig(quantized_engine)
-    torch.quantization.prepare(model, inplace=True)
-    torch.quantization.convert(model, inplace=True)
-    model.load_state_dict(
-        torch.load(quantized_model_path, weights_only=False, map_location="cpu")
-    )
     return model
 
 
@@ -165,18 +136,6 @@ def build_class_id_to_label_map(mapping_file):
     return class_id_to_label
 
 
-# Choose regular or quantized model loading
-def load_model(num_classes, weights_path, device, quantized):
-    if quantized:
-        return load_quantized_model(num_classes, weights_path)
-
-    return initialize_model(
-        num_classes=num_classes,
-        weights_path=weights_path,
-        device=device,
-    )
-
-
 # Run batch inference and store class index plus confidence
 @torch.inference_mode()
 def predict_batches(model, batches, device):
@@ -222,20 +181,30 @@ def format_prediction(predicted_class_idx, confidence, train_id_to_class_id, cla
     }
 
 
+def load_config():
+    with initialize(version_base=None, config_path="conf"):
+        cfg = compose(config_name="config")
+    OmegaConf.resolve(cfg)
+    return cfg
+
+
 # CLI arguments for batch inference
-def parse_args(argv=None):
+def parse_args(argv=None, cfg=None):
+    if cfg is None:
+        cfg = load_config()
+
     parser = argparse.ArgumentParser(description="Run batched inference on image input.")
     parser.add_argument(
         "--input",
-        required=True,
+        default=cfg.inference.data_path,
         help="Path to one image or a directory of images to classify.",
     )
-    parser.add_argument("--weights-path", default=DEFAULT_WEIGHTS_PATH)
-    parser.add_argument("--mapping-path", default=DEFAULT_MAPPING_PATH)
-    parser.add_argument("--class-labels-path", default=DEFAULT_CLASS_LABELS_PATH)
-    parser.add_argument("--num-classes", type=int, default=200)
-    parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--device", default="cuda")
+    parser.add_argument("--weights-path", default=cfg.inference.weights_path)
+    parser.add_argument("--mapping-path", default=cfg.inference.mapping_path)
+    parser.add_argument("--class-labels-path", default=cfg.inference.class_labels_path)
+    parser.add_argument("--num-classes", type=int, default=cfg.inference.num_classes)
+    parser.add_argument("--batch-size", type=int, default=cfg.inference.batch_size)
+    parser.add_argument("--device", default=cfg.device)
     parser.add_argument(
         "--metrics-log-path",
         default="",
@@ -243,11 +212,6 @@ def parse_args(argv=None):
     )
     parser.add_argument("--low-confidence-threshold", type=float, default=0.5)
     parser.add_argument("--signal-threshold", type=float, default=0.5)
-    parser.add_argument(
-        "--quantized",
-        action="store_true",
-        help="Load weights as a quantized compressed model.",
-    )
     return parser.parse_args(argv)
 
 
@@ -260,14 +224,11 @@ def main():
     if device == "cuda" and not torch.cuda.is_available():
         print("CUDA not available, using CPU.")
         device = "cpu"
-    if args.quantized:
-        device = "cpu"
 
-    model = load_model(
+    model = initialize_model(
         num_classes=args.num_classes,
         weights_path=args.weights_path,
         device=device,
-        quantized=args.quantized,
     )
 
     batches = create_batches(
@@ -285,7 +246,7 @@ def main():
             predictions=predictions,
             batch_size=args.batch_size,
             device=device,
-            quantized=args.quantized,
+            quantized=False,
             low_confidence_threshold=args.low_confidence_threshold,
             signal_threshold=args.signal_threshold,
         )
@@ -297,7 +258,7 @@ def main():
 
     print(
         f"Running inference on {len(image_paths)} image(s) "
-        f"with batch_size={args.batch_size}, quantized={args.quantized}"
+        f"with batch_size={args.batch_size}"
     )
     for raw_prediction in predictions:
         prediction = format_prediction(

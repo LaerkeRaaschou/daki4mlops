@@ -6,4 +6,4 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets:
-          - deployment:8000
+          - monitoring-api:8000

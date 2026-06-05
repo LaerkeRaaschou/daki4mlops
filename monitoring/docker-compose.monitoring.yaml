@@ -1,5 +1,5 @@
 services:
-  deployment:
+  monitoring-api:
     build:
       context: ..
       dockerfile: DockerFile
@@ -8,10 +8,29 @@ services:
     ports:
       - "8000:8000"
 
+  deployment-job:
+    build:
+      context: ..
+      dockerfile: DockerFile
+    image: daki4mlops:monitoring-local
+    command:
+      - sh
+      - -c
+      - >
+        python inference.py --metrics-log-path /app/results/runtime_metrics.jsonl &&
+        python drift_detection.py &&
+        python publish_monitoring_metrics.py
+        --monitoring-url http://monitoring-api:8000
+        --runtime-metrics-path /app/results/runtime_metrics.jsonl
+        --drift-summary-path results/drift/drift_summary.json &&
+        python deploy_model.py
+    depends_on:
+      - monitoring-api
+
   prometheus:
     image: prom/prometheus:v2.55.1
     depends_on:
-      - deployment
+      - monitoring-api
     ports:
       - "9090:9090"
     volumes:
