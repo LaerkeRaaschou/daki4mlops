@@ -1,7 +1,14 @@
+import sys
+from pathlib import Path
+
 import torch
 import torch.nn.utils.prune as prune
 import matplotlib.pyplot as plt
 from torchvision import transforms
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from model.resnet18 import ResNet18
 from data.dataloader import get_dataset, get_loaders, get_test_loader

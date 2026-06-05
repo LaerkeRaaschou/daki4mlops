@@ -1,6 +1,13 @@
 import torch
 import os
+import sys
 import datetime
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 import hydra
 import deepspeed
 from torchvision import transforms
@@ -108,7 +115,7 @@ def val_model(model_engine, criterion, batches, device):
     return avg_loss, accuracy
 
 
-@hydra.main(config_path="conf", config_name="config", version_base=None)
+@hydra.main(config_path="../conf", config_name="config", version_base=None)
 def main(cfg):
     torch.manual_seed(cfg.seed)
 
