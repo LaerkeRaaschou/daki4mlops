@@ -143,6 +143,25 @@ pipeline {
             }
         }
 
+        stage('Register Model in MLflow') {
+                    when { 
+                        expression { params.RUN_TRAINING } 
+                        }
+                    steps {
+                        sh '''
+                            set -eux
+                            TAG=$(git rev-parse --short HEAD)
+
+                            docker run --rm \
+                            -e MLFLOW_TRACKING_URI="$MLFLOW_TRACKING_URI" \
+                            -e MLFLOW_EXPERIMENT_NAME="$MLFLOW_EXPERIMENT_NAME" \
+                            -v "$WORKSPACE/artifacts_gr5:/app/artifacts" \
+                            "${IMAGE_NAME}:${TAG}" \
+                            python register_model.py
+                        '''
+                    }
+                }
+
 
         stage('Generate Model Card') {
             when { expression { params.RUN_TRAINING } }
@@ -157,25 +176,6 @@ pipeline {
                         -v "$WORKSPACE/artifacts_gr5:/app/artifacts" \
                         "${IMAGE_NAME}:${TAG}" \
                         python model/generate_model_card.py
-                '''
-            }
-        }
-
-        stage('Register Model in MLflow') {
-            when { 
-                expression { params.RUN_TRAINING } 
-                }
-            steps {
-                sh '''
-                    set -eux
-                    TAG=$(git rev-parse --short HEAD)
-
-                    docker run --rm \
-                    -e MLFLOW_TRACKING_URI="$MLFLOW_TRACKING_URI" \
-                    -e MLFLOW_EXPERIMENT_NAME="$MLFLOW_EXPERIMENT_NAME" \
-                    -v "$WORKSPACE/artifacts_gr5:/app/artifacts" \
-                    "${IMAGE_NAME}:${TAG}" \
-                    python register_model.py
                 '''
             }
         }
