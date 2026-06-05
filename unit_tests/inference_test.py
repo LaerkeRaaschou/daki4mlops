@@ -18,7 +18,9 @@ def test_preprocess_image_accepts_readable_image(tmp_path):
 
 def test_preprocess_image_rejects_missing_file(tmp_path):
     with pytest.raises(FileNotFoundError):
-        inference.preprocess_image(tmp_path / "missing.png", inference.build_transform())
+        inference.preprocess_image(
+            tmp_path / "missing.png", inference.build_transform()
+        )
 
 
 def test_preprocess_image_rejects_non_image(tmp_path):
@@ -54,7 +56,11 @@ def test_create_batches_yields_final_partial_batch(tmp_path):
         Image.new("RGB", (4, 4), color=(10, 20, 30)).save(image_path)
         paths.append(image_path)
 
-    batches = list(inference.create_batches(paths, batch_size=2, transform=inference.build_transform()))
+    batches = list(
+        inference.create_batches(
+            paths, batch_size=2, transform=inference.build_transform()
+        )
+    )
 
     assert len(batches) == 2
     assert tuple(batches[0][0].shape) == (2, 3, 64, 64)

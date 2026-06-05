@@ -34,7 +34,9 @@ def quantize_model(full_model, quantized_model):
     model.load_state_dict(torch.load(full_model, map_location=torch.device("cpu")))
     model = model._orig_mod
     model.eval()
-    model.qconfig = torch.quantization.get_default_qconfig(torch.backends.quantized.engine)
+    model.qconfig = torch.quantization.get_default_qconfig(
+        torch.backends.quantized.engine
+    )
     model_prepared = torch.quantization.prepare(model, inplace=False)
     with torch.no_grad():
         for _ in range(10):
@@ -49,7 +51,9 @@ def load_quantized_model(quantized_model_path):
     torch.backends.quantized.engine = get_quantized_engine()
     model = ResNet18(num_classes=200)
     model.eval()
-    model.qconfig = torch.quantization.get_default_qconfig(torch.backends.quantized.engine)
+    model.qconfig = torch.quantization.get_default_qconfig(
+        torch.backends.quantized.engine
+    )
     torch.quantization.prepare(model, inplace=True)
     torch.quantization.convert(model, inplace=True)
     model.load_state_dict(

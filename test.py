@@ -57,9 +57,9 @@ def test_model(model, num_classes, test_loader):
                 class_stats[class_id]["correct_count"] += (
                     (correct_mask & class_mask).sum().item()
                 )
-                class_stats[class_id][
-                    "sum_confidence"
-                ] += class_confidences.sum().item()
+                class_stats[class_id]["sum_confidence"] += (
+                    class_confidences.sum().item()
+                )
 
                 min_conf = class_confidences.min().item()
                 if min_conf < class_stats[class_id]["lowest_confidence"]:
@@ -161,7 +161,7 @@ def report_statistics(total_stats, class_stats, save_file):
 def main(cfg):
     # torch.backends.cudnn.benchmark = True
     # torch.use_deterministic_algorithms(True)
-    
+
     test_transform = transforms.Compose(
         [
             transforms.Resize((64, 64)),

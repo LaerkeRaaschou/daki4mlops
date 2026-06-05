@@ -18,7 +18,7 @@ def register_model():
     runs = client.search_runs(
         experiment_ids=[experiment.experiment_id],
         order_by=["start_time DESC"],
-        max_results=1
+        max_results=1,
     )
 
     if not runs:

@@ -64,9 +64,9 @@ def test_train_model_updates_weights(monkeypatch):
     )
 
     w_after = model[1].weight.detach()
-    assert not torch.allclose(
-        w_before, w_after
-    ), "Expected weights to change after training"
+    assert not torch.allclose(w_before, w_after), (
+        "Expected weights to change after training"
+    )
 
 
 def test_train_model_logs_something(monkeypatch):

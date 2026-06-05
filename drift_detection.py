@@ -142,10 +142,11 @@ def run_evidently_report(reference_data, current_data, output_dir, report_factor
         from evidently import Report
         from evidently.presets import DataDriftPreset
 
-        report_factory = lambda: Report(
-            [DataDriftPreset(method="psi")],
-            include_tests=True,
-        )
+        def report_factory():
+            return Report(
+                [DataDriftPreset(method="psi")],
+                include_tests=True,
+            )
 
     report = report_factory()
     snapshot = report.run(

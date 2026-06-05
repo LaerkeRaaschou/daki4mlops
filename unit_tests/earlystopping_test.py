@@ -11,6 +11,7 @@ def test_early_stopping_first_call_sets_best_loss_and_does_not_stop():
     assert es.stop_training is False
     assert stopped is None
 
+
 def test_early_stopping_no_improvement_increments_counter():
     es = EarlyStopping(patience=3, delta=0.01, verbose=False)
 
@@ -21,6 +22,7 @@ def test_early_stopping_no_improvement_increments_counter():
     assert es.no_improvement_count == 1
     assert es.stop_training is False
     assert stopped is False
+
 
 def test_early_stopping_improvement_resets_counter():
     es = EarlyStopping(patience=3, delta=0.01, verbose=False)
@@ -35,6 +37,7 @@ def test_early_stopping_improvement_resets_counter():
     assert es.stop_training is False
     assert stopped is None
 
+
 def test_early_stopping_triggers_after_patience_exceeded():
     es = EarlyStopping(patience=2, delta=0.01, verbose=False)
 
@@ -44,7 +47,7 @@ def test_early_stopping_triggers_after_patience_exceeded():
     assert es.stop_training is False
 
     es.check_early_stop(val_loss=1.0)
-    assert es.stop_training is False  
+    assert es.stop_training is False
 
     stopped = es.check_early_stop(val_loss=1.0)
 

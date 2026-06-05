@@ -19,7 +19,9 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 # Load a regular model from saved weights
 def initialize_model(num_classes, weights_path, device):
     if weights_path is None:
-        raise ValueError("No weights provided. Please provide model weights for inference.")
+        raise ValueError(
+            "No weights provided. Please provide model weights for inference."
+        )
     if not os.path.isfile(weights_path):
         raise FileNotFoundError(f"Model weights file not found: {weights_path}")
 
@@ -164,10 +166,14 @@ def predict_batches(model, batches, device):
 
 
 # Convert raw model output into a printable prediction
-def format_prediction(predicted_class_idx, confidence, train_id_to_class_id, class_id_to_label):
+def format_prediction(
+    predicted_class_idx, confidence, train_id_to_class_id, class_id_to_label
+):
     class_id = train_id_to_class_id.get(predicted_class_idx)
     if class_id is None:
-        raise KeyError(f"No class ID mapping found for train index {predicted_class_idx}.")
+        raise KeyError(
+            f"No class ID mapping found for train index {predicted_class_idx}."
+        )
 
     class_label = class_id_to_label.get(class_id)
     if class_label is None:
@@ -193,7 +199,9 @@ def parse_args(argv=None, cfg=None):
     if cfg is None:
         cfg = load_config()
 
-    parser = argparse.ArgumentParser(description="Run batched inference on image input.")
+    parser = argparse.ArgumentParser(
+        description="Run batched inference on image input."
+    )
     parser.add_argument(
         "--input",
         default=cfg.inference.data_path,
