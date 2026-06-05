@@ -3,8 +3,13 @@ pipeline {
 
     options {
         skipDefaultCheckout(true)
+        
+    }
+
+    triggers{
         pollSCM('H/5 * * * *')
     }
+
 
     parameters {
         booleanParam(name: 'RUN_TRAINING', defaultValue: false, description: 'Run model training.')
