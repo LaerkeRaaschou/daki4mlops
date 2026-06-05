@@ -204,7 +204,7 @@ def main(cfg):
         )
         mlflow.log_dict(
             OmegaConf.to_container(cfg, resolve=True),
-            hydra.utils.to_absolute_path("config.yaml"),
+            "config.yaml",
         )
 
     # Initialize model
