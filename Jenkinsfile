@@ -3,6 +3,7 @@ pipeline {
 
     options {
         skipDefaultCheckout(true)
+        pollSCM('H/5 * * * *')
     }
 
     parameters {
