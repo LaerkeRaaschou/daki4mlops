@@ -31,7 +31,20 @@ def sync_if_cuda(device):
         torch.cuda.synchronize()
 
 
-# Load a regular model from saved weights
+def get_dmon_gpu_id(device):
+    """Return the physical GPU id that nvidia-smi should monitor."""
+    if device.type != "cuda":
+        return None
+
+    visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES")
+    if visible_devices:
+        first_visible_device = visible_devices.split(",")[0].strip()
+        if first_visible_device:
+            return first_visible_device
+
+    return str(torch.cuda.current_device())
+
+
 def initialize_model(num_classes, weights_path, device):
     if weights_path is None:
         raise ValueError("No weights provided. Please provide model weights for inference.")
@@ -41,7 +54,6 @@ def initialize_model(num_classes, weights_path, device):
     model = ResNet18(num_classes)
     weights = torch.load(weights_path, map_location=device)
 
-    # Allows loading weights saved from torch.compile(model)
     prefix = "_orig_mod."
     if any(key.startswith(prefix) for key in weights):
         weights = {
@@ -67,10 +79,10 @@ def build_test_transform():
 
 
 class DmonMonitor:
-    """Collect average GPU compute and memory-controller utilization with nvidia-smi dmon."""
 
-    def __init__(self, output_path):
+    def __init__(self, output_path, gpu_id=None):
         self.output_path = Path(output_path)
+        self.gpu_id = gpu_id
         self.process = None
         self.output = ""
         self.warning = ""
@@ -80,9 +92,22 @@ class DmonMonitor:
             self.warning = "nvidia-smi not found; GPU utilization fields will be zero."
             return self
 
+        command = ["nvidia-smi", "dmon", "-s", "pucm", "-d", "1"]
+        if self.gpu_id is not None:
+            command = [
+                "nvidia-smi",
+                "dmon",
+                "-i",
+                str(self.gpu_id),
+                "-s",
+                "pucm",
+                "-d",
+                "1",
+            ]
+
         try:
             self.process = subprocess.Popen(
-                ["nvidia-smi", "dmon", "-s", "pucm", "-d", "1"],
+                command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
@@ -119,7 +144,6 @@ def parse_dmon_output(output):
             continue
 
         try:
-            # nvidia-smi dmon -s pucm: gpu pwr gtemp mtemp sm mem ...
             sm_values.append(float(fields[4]))
             mem_values.append(float(fields[5]))
         except ValueError:
@@ -137,7 +161,6 @@ def dmon_output_path(output_csv, batch_size):
     return csv_path.with_name(f"{csv_path.stem}_dmon_batch{batch_size}.txt")
 
 
-# Measure the minimum metrics needed for D4.2 for one batch size
 def benchmark_one_batch_size(cfg, model, batch_size, device, dmon_path, dataset):
     num_workers = int(OmegaConf.select(cfg, "benchmark.num_workers", default=4))
 
@@ -153,7 +176,7 @@ def benchmark_one_batch_size(cfg, model, batch_size, device, dmon_path, dataset)
     if len(test_loader.dataset) == 0:
         raise ValueError(f"No samples found in {cfg.inference.data_path}.")
 
-    # Warm up once so first-use CUDA overhead is not included in the benchmark.
+    # Warm up once so cold start does not affect timing
     with torch.inference_mode():
         warmup_images, _ = next(iter(test_loader))
         warmup_images = warmup_images.to(device, non_blocking=True)
@@ -162,8 +185,9 @@ def benchmark_one_batch_size(cfg, model, batch_size, device, dmon_path, dataset)
 
     processed_samples = 0
     processed_batches = 0
+    dmon_gpu_id = get_dmon_gpu_id(device)
 
-    with DmonMonitor(dmon_path) as dmon:
+    with DmonMonitor(dmon_path, gpu_id=dmon_gpu_id) as dmon:
         if dmon.warning:
             print(dmon.warning)
 
@@ -201,7 +225,6 @@ def benchmark_one_batch_size(cfg, model, batch_size, device, dmon_path, dataset)
     }
 
 
-# Save benchmark rows for report evidence
 def write_csv(rows, output_path):
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
@@ -221,7 +244,6 @@ def write_csv(rows, output_path):
         writer.writerows(rows)
 
 
-# One compact plot: throughput shows speedup/saturation, latency shows the batching trade-off.
 def write_plot(rows, output_path):
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
@@ -230,7 +252,6 @@ def write_plot(rows, output_path):
     batch_latency = [row["latency_ms_per_batch"] for row in rows]
     image_latency = [row["latency_ms_per_image"] for row in rows]
 
-    # Use categorical x-positions so all tested batch sizes are equally readable.
     x_positions = list(range(len(batch_sizes)))
     x_labels = [str(size) for size in batch_sizes]
 
@@ -308,7 +329,6 @@ def main(cfg):
         device=device,
     )
 
-    # Create the dataset once to avoid repeated dataset construction overhead.
     initial_loader = get_test_loader(
         mapping_path=cfg.inference.mapping_path,
         test_dir=cfg.inference.data_path,
