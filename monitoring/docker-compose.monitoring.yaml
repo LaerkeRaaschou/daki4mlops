@@ -17,7 +17,7 @@ services:
       - sh
       - -c
       - >
-        python inference.py --metrics-log-path /app/results/runtime_metrics.jsonl &&
+        python inference.py &&
         python drift_detection.py &&
         python publish_monitoring_metrics.py
         --monitoring-url http://monitoring-api:8000

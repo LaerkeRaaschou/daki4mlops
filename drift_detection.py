@@ -4,6 +4,8 @@ from pathlib import Path
 import hydra
 import numpy as np
 import pandas as pd
+from evidently import Report
+from evidently.presets import DataDriftPreset
 from omegaconf import DictConfig, OmegaConf
 from PIL import Image
 
@@ -51,8 +53,6 @@ def extract_image_features(image, image_path):
         "std_b": float(channel_std[2]),
         "brightness": float(values.mean()),
         "contrast": float(values.std()),
-        "width": int(rgb.width),
-        "height": int(rgb.height),
     }
 
 
@@ -71,58 +71,35 @@ def build_feature_dataframe(image_paths):
 
 # Extract simple drift status from Evidently output
 def extract_drift_summary(snapshot_dict):
-    tests = snapshot_dict.get("tests", [])
-    drift_detected = any(
-        str(test.get("status", "")).upper() == "FAIL"
-        for test in tests
-        if isinstance(test, dict)
-    )
-    drifted_columns = 0
-
     for metric in snapshot_dict.get("metrics", []):
         if not isinstance(metric, dict):
             continue
 
-        metric_name = str(metric.get("metric_name", "")).lower()
+        metric_name = str(metric.get("metric_name", ""))
+        metric_config = metric.get("config", {})
         metric_value = metric.get("value", {})
-        if "driftedcolumnscount" in metric_name and isinstance(metric_value, dict):
-            count = metric_value.get("count")
-            if count is not None:
-                drifted_columns = max(drifted_columns, int(count))
+        metric_type = str(metric_config.get("type", ""))
 
-    def visit(value):
-        nonlocal drifted_columns
-        if isinstance(value, dict):
-            for key, item in value.items():
-                key_lower = str(key).lower()
-                if (
-                    isinstance(item, bool)
-                    and item
-                    and ("drift" in key_lower or "drifted" in key_lower)
-                ):
-                    drifted_columns += 1
-                elif (
-                    isinstance(item, (int, float))
-                    and "drifted" in key_lower
-                    and "share" not in key_lower
-                ):
-                    drifted_columns = max(drifted_columns, int(item))
-                visit(item)
-        elif isinstance(value, list):
-            for item in value:
-                visit(item)
+        is_drifted_columns_count = (
+            metric_name.startswith("DriftedColumnsCount")
+            or metric_type.endswith("DriftedColumnsCount")
+        )
+        if not is_drifted_columns_count:
+            continue
+        if not isinstance(metric_value, dict):
+            raise ValueError("DriftedColumnsCount metric value must be an object.")
 
-    visit(snapshot_dict)
+        count = metric_value.get("count")
+        share = metric_value.get("share")
+        if count is None or share is None:
+            raise ValueError("DriftedColumnsCount metric must include count and share.")
 
-    return {
-        "drift_detected": bool(drift_detected or drifted_columns > 0),
-        "drifted_columns": int(drifted_columns),
-    }
+        return {
+            "drift_detected": float(share) >= 0.5,
+            "drifted_columns": int(count),
+        }
 
-
-# Convert drift status into a retraining signal
-def build_drift_signal(summary):
-    return {"retraining_signal": bool(summary["drift_detected"])}
+    raise ValueError("Evidently snapshot does not contain DriftedColumnsCount metric.")
 
 
 # Remove text metadata before passing data to Evidently
@@ -139,14 +116,10 @@ def run_evidently_report(reference_data, current_data, output_dir, report_factor
     summary_path = output_dir / "drift_summary.json"
 
     if report_factory is None:
-        from evidently import Report
-        from evidently.presets import DataDriftPreset
-
-        def report_factory():
-            return Report(
-                [DataDriftPreset(method="psi")],
-                include_tests=True,
-            )
+        report_factory = lambda: Report(
+            [DataDriftPreset(method="ks", drift_share=0.5, threshold=0.05)],
+            include_tests=True,
+        )
 
     report = report_factory()
     snapshot = report.run(
@@ -161,7 +134,7 @@ def run_evidently_report(reference_data, current_data, output_dir, report_factor
         snapshot_dict = snapshot_json
 
     summary = extract_drift_summary(snapshot_dict)
-    summary.update(build_drift_signal(summary))
+    summary.update({"retraining_signal": bool(summary["drift_detected"])})
     summary.update({"summary_report": str(summary_path)})
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
 

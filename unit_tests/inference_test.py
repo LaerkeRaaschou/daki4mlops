@@ -1,7 +1,8 @@
 import json
-from types import SimpleNamespace
 
 import pytest
+import torch
+from omegaconf import OmegaConf
 from PIL import Image
 
 import inference
@@ -90,44 +91,194 @@ def test_format_prediction_maps_label():
     assert prediction["confidence"] == 0.75
 
 
-def test_parse_args_exposes_optional_runtime_metrics(monkeypatch):
-    monkeypatch.setattr(
-        "sys.argv",
-        [
-            "inference.py",
-            "--input",
-            "images",
-            "--metrics-log-path",
-            "runtime/inference.jsonl",
-        ],
-    )
+def test_predict_batches_calls_callback_once_per_batch():
+    class FakeModel:
+        def __call__(self, batch_tensor):
+            return torch.tensor(
+                [[0.0, 2.0], [3.0, 0.0], [0.5, 1.5]],
+                dtype=torch.float32,
+            )[: batch_tensor.shape[0]]
 
-    args = inference.parse_args()
+    batches = [
+        (torch.zeros((2, 3, 64, 64)), ["a.png", "b.png"]),
+        (torch.zeros((1, 3, 64, 64)), ["c.png"]),
+    ]
+    callback_batches = []
 
-    assert args.metrics_log_path == "runtime/inference.jsonl"
-    assert args.low_confidence_threshold == 0.5
-    assert args.signal_threshold == 0.5
-
-
-def test_parse_args_defaults_to_hydra_inference_config():
-    cfg = SimpleNamespace(
-        device="cuda",
-        inference=SimpleNamespace(
-            data_path="/configured/images",
-            weights_path="/configured/model.pt",
-            mapping_path="/configured/mapping.json",
-            class_labels_path="/configured/words.txt",
-            num_classes=200,
-            batch_size=64,
+    predictions = inference.predict_batches(
+        model=FakeModel(),
+        batches=batches,
+        device="cpu",
+        on_batch_predictions=lambda batch_predictions: callback_batches.append(
+            list(batch_predictions)
         ),
     )
 
-    args = inference.parse_args([], cfg=cfg)
+    assert len(callback_batches) == 2
+    assert [prediction["image_path"] for prediction in predictions] == [
+        "a.png",
+        "b.png",
+        "c.png",
+    ]
+    assert [prediction["image_path"] for prediction in callback_batches[0]] == [
+        "a.png",
+        "b.png",
+    ]
+    assert [prediction["image_path"] for prediction in callback_batches[1]] == ["c.png"]
 
-    assert args.input == "/configured/images"
-    assert args.weights_path == "/configured/model.pt"
-    assert args.mapping_path == "/configured/mapping.json"
-    assert args.class_labels_path == "/configured/words.txt"
-    assert args.num_classes == 200
-    assert args.batch_size == 64
-    assert args.device == "cuda"
+
+def test_inference_carbontracker_wraps_prediction(monkeypatch):
+    calls = []
+
+    class FakeTracker:
+        def __init__(self, epochs, components):
+            calls.append(("init", epochs, components))
+
+        def epoch_start(self):
+            calls.append(("epoch_start",))
+
+        def epoch_end(self):
+            calls.append(("epoch_end",))
+
+        def stop(self):
+            calls.append(("stop",))
+
+    cfg = OmegaConf.create(
+        {
+            "carbontracker": True,
+            "device": "cpu",
+            "inference": {
+                "data_path": "images",
+                "weights_path": "model.pt",
+                "num_classes": 200,
+                "batch_size": 32,
+                "metrics_log_path": "",
+                "mapping_path": "mapping.json",
+                "class_labels_path": "words.txt",
+                "monitoring_url": "",
+                "low_confidence_threshold": 0.5,
+                "signal_threshold": 0.5,
+            },
+        }
+    )
+
+    monkeypatch.setattr(inference, "collect_image_paths", lambda path: ["image.png"])
+    monkeypatch.setattr(inference, "initialize_model", lambda **kwargs: "model")
+    monkeypatch.setattr(inference, "build_transform", lambda: "transform")
+    monkeypatch.setattr(
+        inference,
+        "create_batches",
+        lambda image_paths, batch_size, transform: ["batch"],
+    )
+
+    def fake_predict_batches(model, batches, device, on_batch_predictions=None):
+        calls.append(("predict_batches",))
+        return [
+            {"image_path": "image.png", "predicted_class_idx": 1, "confidence": 0.75}
+        ]
+
+    monkeypatch.setattr(inference, "predict_batches", fake_predict_batches)
+    monkeypatch.setattr(
+        inference,
+        "build_train_id_to_class_id_map",
+        lambda mapping_file: {1: "n0002"},
+    )
+    monkeypatch.setattr(
+        inference,
+        "build_class_id_to_label_map",
+        lambda mapping_file: {"n0002": "example label"},
+    )
+    monkeypatch.setattr(inference, "CarbonTracker", FakeTracker)
+
+    inference.main.__wrapped__(cfg)
+
+    assert calls == [
+        ("init", 1, "gpu"),
+        ("epoch_start",),
+        ("predict_batches",),
+        ("epoch_end",),
+        ("stop",),
+    ]
+
+
+def test_inference_posts_runtime_metrics_per_batch_without_final_aggregate(monkeypatch):
+    appended_records = []
+    posted_records = []
+
+    cfg = OmegaConf.create(
+        {
+            "carbontracker": False,
+            "device": "cpu",
+            "inference": {
+                "data_path": "images",
+                "weights_path": "model.pt",
+                "num_classes": 200,
+                "batch_size": 32,
+                "metrics_log_path": "runtime_metrics.jsonl",
+                "mapping_path": "mapping.json",
+                "class_labels_path": "words.txt",
+                "monitoring_url": "http://monitoring:8000",
+                "low_confidence_threshold": 0.5,
+                "signal_threshold": 0.5,
+            },
+        }
+    )
+
+    first_batch = [
+        {"image_path": "a.png", "predicted_class_idx": 1, "confidence": 0.9}
+    ]
+    second_batch = [
+        {"image_path": "b.png", "predicted_class_idx": 1, "confidence": 0.2}
+    ]
+
+    monkeypatch.setattr(inference, "collect_image_paths", lambda path: ["a.png", "b.png"])
+    monkeypatch.setattr(inference, "initialize_model", lambda **kwargs: "model")
+    monkeypatch.setattr(inference, "build_transform", lambda: "transform")
+    monkeypatch.setattr(
+        inference,
+        "create_batches",
+        lambda image_paths, batch_size, transform: ["first", "second"],
+    )
+
+    def fake_predict_batches(model, batches, device, on_batch_predictions=None):
+        on_batch_predictions(first_batch)
+        on_batch_predictions(second_batch)
+        return first_batch + second_batch
+
+    def fake_append_jsonl(record, output_path):
+        appended_records.append((record, output_path))
+        return output_path
+
+    def fake_post_json(url, payload):
+        posted_records.append((url, payload))
+
+    monkeypatch.setattr(inference, "predict_batches", fake_predict_batches)
+    monkeypatch.setattr(inference, "append_jsonl", fake_append_jsonl)
+    monkeypatch.setattr(inference, "post_json", fake_post_json)
+    monkeypatch.setattr(
+        inference,
+        "build_train_id_to_class_id_map",
+        lambda mapping_file: {1: "n0002"},
+    )
+    monkeypatch.setattr(
+        inference,
+        "build_class_id_to_label_map",
+        lambda mapping_file: {"n0002": "example label"},
+    )
+
+    inference.main.__wrapped__(cfg)
+
+    assert len(appended_records) == 2
+    assert len(posted_records) == 2
+    assert [url for url, _payload in posted_records] == [
+        "http://monitoring:8000/runtime-metrics",
+        "http://monitoring:8000/runtime-metrics",
+    ]
+    assert [record["image_count"] for record, _path in appended_records] == [1, 1]
+    assert [record["batch_count"] for record, _path in appended_records] == [1, 1]
+    assert [record["average_confidence"] for record, _path in appended_records] == [
+        0.9,
+        0.2,
+    ]
+
+

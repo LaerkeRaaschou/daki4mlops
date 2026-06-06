@@ -102,7 +102,17 @@ pipeline {
                     set -eux
                     TAG=$(git rev-parse --short HEAD)
                     docker run --rm "${IMAGE_NAME}:${TAG}" \
-                        python3 -m pytest unit_tests -v --cov=.
+                    python3 -m pytest unit_tests -v \
+                        --cov=train \
+                        --cov=test \
+                        --cov=inference \
+                        --cov=drift_detection \
+                        --cov=runtime_metrics \
+                        --cov=monitoring_api \
+                        --cov=publish_monitoring_metrics \
+                        --cov=data \
+                        --cov=model \
+                        --cov-report=term
                 '''
             }
         }
@@ -263,7 +273,7 @@ pipeline {
 
                 mkdir -p "$WORKSPACE/results"
 
-                docker run --rm \
+                docker run --rm --gpus all \
                     --network "$NETWORK" \
                     -e MLFLOW_TRACKING_URI="$MLFLOW_TRACKING_URI" \
                     -e MLFLOW_EXPERIMENT_NAME="$MLFLOW_EXPERIMENT_NAME" \
@@ -273,7 +283,7 @@ pipeline {
                     -v "$WORKSPACE/results:/app/results" \
                     "${IMAGE_NAME}:${TAG}" \
                     sh -c '
-                        python inference.py --metrics-log-path /app/results/runtime_metrics.jsonl &&
+                        python inference.py carbontracker=true &&
                         python drift_detection.py &&
                         python publish_monitoring_metrics.py \
                             --monitoring-url http://monitoring-api:8000 \
