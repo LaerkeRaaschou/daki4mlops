@@ -61,8 +61,12 @@ def update_runtime_metrics(record):
 # Update latest drift summary and infer retraining signal when needed
 def update_drift_summary(summary):
     drift = _STATE["drift"]
-    drift["drift_detected"] = bool(summary.get("drift_detected", drift["drift_detected"]))
-    drift["drifted_columns"] = int(summary.get("drifted_columns", drift["drifted_columns"]))
+    drift["drift_detected"] = bool(
+        summary.get("drift_detected", drift["drift_detected"])
+    )
+    drift["drifted_columns"] = int(
+        summary.get("drifted_columns", drift["drifted_columns"])
+    )
     if "retraining_signal" in summary:
         drift["retraining_signal"] = bool(summary["retraining_signal"])
     elif "drift_detected" in summary:
