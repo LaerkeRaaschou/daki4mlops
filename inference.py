@@ -1,14 +1,15 @@
-import argparse
 import json
 import os
 from pathlib import Path
 
+import hydra
 import torch
-from hydra import compose, initialize
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 from PIL import Image, UnidentifiedImageError
 from torchvision import transforms
+from carbontracker.tracker import CarbonTracker
 
+from publish_monitoring_metrics import post_json
 from runtime_metrics import append_jsonl, build_inference_metrics
 from model.resnet18 import ResNet18
 
@@ -138,7 +139,7 @@ def build_class_id_to_label_map(mapping_file):
 
 # Run batch inference and store class index plus confidence
 @torch.inference_mode()
-def predict_batches(model, batches, device):
+def predict_batches(model, batches, device, on_batch_predictions=None):
     predictions = []
 
     for batch_tensor, batch_paths in batches:
@@ -146,19 +147,23 @@ def predict_batches(model, batches, device):
         outputs = model(batch_tensor)
         probabilities = torch.softmax(outputs, dim=1)
         confidences, predicted_classes = torch.max(probabilities, dim=1)
+        batch_predictions = []
 
         for image_path, predicted_class, confidence in zip(
             batch_paths,
             predicted_classes.cpu().tolist(),
             confidences.cpu().tolist(),
         ):
-            predictions.append(
-                {
-                    "image_path": image_path,
-                    "predicted_class_idx": int(predicted_class),
-                    "confidence": float(confidence),
-                }
-            )
+            prediction = {
+                "image_path": image_path,
+                "predicted_class_idx": int(predicted_class),
+                "confidence": float(confidence),
+            }
+            predictions.append(prediction)
+            batch_predictions.append(prediction)
+
+        if on_batch_predictions:
+            on_batch_predictions(batch_predictions)
 
     return predictions
 
@@ -181,84 +186,83 @@ def format_prediction(predicted_class_idx, confidence, train_id_to_class_id, cla
     }
 
 
-def load_config():
-    with initialize(version_base=None, config_path="conf"):
-        cfg = compose(config_name="config")
+@hydra.main(config_path="conf", config_name="config", version_base=None)
+def main(cfg: DictConfig):
     OmegaConf.resolve(cfg)
-    return cfg
+    image_paths = collect_image_paths(cfg.inference.data_path)
 
-
-# CLI arguments for batch inference
-def parse_args(argv=None, cfg=None):
-    if cfg is None:
-        cfg = load_config()
-
-    parser = argparse.ArgumentParser(description="Run batched inference on image input.")
-    parser.add_argument(
-        "--input",
-        default=cfg.inference.data_path,
-        help="Path to one image or a directory of images to classify.",
-    )
-    parser.add_argument("--weights-path", default=cfg.inference.weights_path)
-    parser.add_argument("--mapping-path", default=cfg.inference.mapping_path)
-    parser.add_argument("--class-labels-path", default=cfg.inference.class_labels_path)
-    parser.add_argument("--num-classes", type=int, default=cfg.inference.num_classes)
-    parser.add_argument("--batch-size", type=int, default=cfg.inference.batch_size)
-    parser.add_argument("--device", default=cfg.device)
-    parser.add_argument(
-        "--metrics-log-path",
-        default="",
-        help="Optional JSONL file for deployment runtime inference metrics.",
-    )
-    parser.add_argument("--low-confidence-threshold", type=float, default=0.5)
-    parser.add_argument("--signal-threshold", type=float, default=0.5)
-    return parser.parse_args(argv)
-
-
-# Inference CLI entrypoint
-def main():
-    args = parse_args()
-    image_paths = collect_image_paths(args.input)
-
-    device = args.device
+    device = cfg.device
     if device == "cuda" and not torch.cuda.is_available():
         print("CUDA not available, using CPU.")
         device = "cpu"
 
     model = initialize_model(
-        num_classes=args.num_classes,
-        weights_path=args.weights_path,
+        num_classes=cfg.inference.num_classes,
+        weights_path=cfg.inference.weights_path,
         device=device,
     )
 
     batches = create_batches(
         image_paths=image_paths,
-        batch_size=args.batch_size,
+        batch_size=cfg.inference.batch_size,
         transform=build_transform(),
     )
+
+    tracker = None
+    if cfg.carbontracker:
+        tracker = CarbonTracker(epochs=1, components="gpu")
+
+    monitoring_url = str(
+        OmegaConf.select(cfg, "inference.monitoring_url", default="")
+    ).rstrip("/")
+
+    def handle_batch_predictions(batch_predictions):
+        metrics = build_inference_metrics(
+            predictions=batch_predictions,
+            batch_size=cfg.inference.batch_size,
+            device=device,
+            quantized=False,
+            low_confidence_threshold=cfg.inference.low_confidence_threshold,
+            signal_threshold=cfg.inference.signal_threshold,
+        )
+        if cfg.inference.metrics_log_path:
+            metrics_path = append_jsonl(metrics, cfg.inference.metrics_log_path)
+            print(f"Runtime metrics logged to: {metrics_path}")
+        post_json(f"{monitoring_url}/runtime-metrics", metrics)
+
+    batch_callback = handle_batch_predictions if monitoring_url else None
+
+    if cfg.carbontracker:
+        tracker.epoch_start()
+
     predictions = predict_batches(
         model=model,
         batches=batches,
         device=device,
+        on_batch_predictions=batch_callback,
     )
-    if args.metrics_log_path:
+
+    if cfg.carbontracker:
+        tracker.epoch_end()
+
+    if cfg.inference.metrics_log_path and not monitoring_url:
         metrics = build_inference_metrics(
             predictions=predictions,
-            batch_size=args.batch_size,
+            batch_size=cfg.inference.batch_size,
             device=device,
             quantized=False,
-            low_confidence_threshold=args.low_confidence_threshold,
-            signal_threshold=args.signal_threshold,
+            low_confidence_threshold=cfg.inference.low_confidence_threshold,
+            signal_threshold=cfg.inference.signal_threshold,
         )
-        metrics_path = append_jsonl(metrics, args.metrics_log_path)
+        metrics_path = append_jsonl(metrics, cfg.inference.metrics_log_path)
         print(f"Runtime metrics logged to: {metrics_path}")
 
-    train_id_to_class_id = build_train_id_to_class_id_map(args.mapping_path)
-    class_id_to_label = build_class_id_to_label_map(args.class_labels_path)
+    train_id_to_class_id = build_train_id_to_class_id_map(cfg.inference.mapping_path)
+    class_id_to_label = build_class_id_to_label_map(cfg.inference.class_labels_path)
 
     print(
         f"Running inference on {len(image_paths)} image(s) "
-        f"with batch_size={args.batch_size}"
+        f"with batch_size={cfg.inference.batch_size}"
     )
     for raw_prediction in predictions:
         prediction = format_prediction(
@@ -274,6 +278,9 @@ def main():
             f"class_idx={prediction['predicted_class_idx']}, "
             f"confidence={prediction['confidence']:.4f})"
         )
+
+    if tracker:
+        tracker.stop()
 
 
 if __name__ == "__main__":

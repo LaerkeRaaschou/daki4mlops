@@ -17,9 +17,10 @@ from omegaconf import OmegaConf
 from torchvision import transforms
 
 from data.dataloader import get_test_loader
+from experiments.quantization import load_quantized_model
 
 
-DEFAULT_BATCH_SIZES = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+DEFAULT_BATCH_SIZES = [1, 2, 4, 8, 16, 32, 64, 128]
 
 
 # Read batch sizes from config or use defaults
@@ -142,8 +143,6 @@ def print_summary(rows):
 # Batch inference benchmark entrypoint
 @hydra.main(config_path="../conf", config_name="config", version_base=None)
 def main(cfg):
-    from experiments.quantization import load_quantized_model
-
     if cfg.device == "cuda":
         print("Using CPU for quantized PyTorch batch benchmark.")
 
