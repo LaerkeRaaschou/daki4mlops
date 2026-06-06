@@ -7,3 +7,4 @@ batch_sizes:
   - 32
 output_csv: results/batch_inference_benchmark.csv
 output_plot: results/batch_inference_benchmark.png
+saturation_gain_threshold: 0.05
